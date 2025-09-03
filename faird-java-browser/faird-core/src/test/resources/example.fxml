@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import link.rdcn.controller.DrawerPane?>
+<!--<?import eu.binjr.common.javafx.controls.TearableTabPane?>-->
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.input.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.Line?>
+<?import link.rdcn.controller.BinjrLoadingPane?>
+
+<AnchorPane prefHeight="800.0" prefWidth="1200.0"
+            xmlns="http://javafx.com/javafx/11.0.1"
+            xmlns:fx="http://javafx.com/fxml/1">
+
+    <SplitPane dividerPositions="0.3382608695652174"
+               focusTraversable="true" nodeOrientation="LEFT_TO_RIGHT"
+               styleClass="binjr-content-view"
+               AnchorPane.bottomAnchor="0" AnchorPane.leftAnchor="48"
+               AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0"
+               HBox.hgrow="ALWAYS">
+
+        <!-- 左侧面板 -->
+        <AnchorPane minWidth="0.0" styleClass="skinnable-pane-border"
+                    SplitPane.resizableWithParent="false">
+            <StackPane minWidth="0.0" prefWidth="335.0"
+                       AnchorPane.bottomAnchor="0"
+                       AnchorPane.leftAnchor="0"
+                       AnchorPane.rightAnchor="0"
+                       AnchorPane.topAnchor="0">
+                <Label alignment="CENTER"
+                       styleClass="add-source-background-icon"
+                       wrapText="true">
+                    <graphic>
+                        <Region styleClass="addSource-icon"/>
+                    </graphic>
+                </Label>
+                <Accordion minWidth="0.0"
+                           mouseTransparent="true"
+                           prefHeight="798.0" prefWidth="416.0"
+                           styleClass="series-table"
+                           AnchorPane.bottomAnchor="0.0"
+                           AnchorPane.leftAnchor="0.0"
+                           AnchorPane.rightAnchor="0.0"
+                           AnchorPane.topAnchor="0.0"/>
+                <BinjrLoadingPane targetFps="2" animationSize="LARGE" visible="false"/>
+            </StackPane>
+
+            <!-- 搜索栏 -->
+            <HBox alignment="CENTER"
+                  focusTraversable="true"
+                  prefHeight="40.0"
+                  styleClass="worksheet-tool-bar"
+                  spacing="5"
+                  AnchorPane.bottomAnchor="-40.0"
+                  AnchorPane.leftAnchor="0.0"
+                  AnchorPane.rightAnchor="0.0">
+                <padding>
+                    <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+                </padding>
+                <TextField maxWidth="Infinity" prefHeight="30" HBox.hgrow="SOMETIMES"/>
+                <Button alignment="BASELINE_LEFT" graphicTextGap="10.0"
+                        contentDisplay="GRAPHIC_ONLY"
+                        prefHeight="30.0" prefWidth="30.0"
+                        styleClass="dialog-button">
+                    <graphic>
+                        <Region prefHeight="32.0" prefWidth="0.0" styleClass="find-icon"/>
+                    </graphic>
+                </Button>
+                <ToggleButton styleClass="dialog-button"
+                              prefHeight="30.0" prefWidth="30.0" text="Aa" contentDisplay="GRAPHIC_ONLY">
+                    <graphic>
+                        <Region styleClass="match-case-icon"/>
+                    </graphic>
+                </ToggleButton>
+                <Button alignment="BASELINE_LEFT" graphicTextGap="10.0"
+                        prefHeight="30.0" prefWidth="30.0"
+                        styleClass="exit">
+                    <graphic>
+                        <Region styleClass="cross-icon"/>
+                    </graphic>
+                </Button>
+            </HBox>
+        </AnchorPane>
+
+        <!-- 中间内容 -->
+        <StackPane SplitPane.resizableWithParent="true">
+            <SplitPane>
+<!--                <TearableTabPane tearable="true" reorderable="true"-->
+<!--                                 prefHeight="200.0" prefWidth="200.0"-->
+<!--                                 AnchorPane.bottomAnchor="0.0"-->
+<!--                                 AnchorPane.leftAnchor="0.0"-->
+<!--                                 AnchorPane.rightAnchor="0.0"-->
+<!--                                 AnchorPane.topAnchor="0.0"/>-->
+            </SplitPane>
+            <BinjrLoadingPane targetFps="2" animationSize="LARGE" visible="false"/>
+        </StackPane>
+    </SplitPane>
+
+    <!-- 左侧命令栏 -->
+    <DrawerPane cache="true" cacheHint="SPEED"
+                animation="GROW"
+                collapsedWidth="48"
+                expandedWidth="200"
+                styleClass="command-bar"
+                AnchorPane.bottomAnchor="0.0"
+                AnchorPane.leftAnchor="0.0"
+                AnchorPane.topAnchor="0.0">
+        <Button contentDisplay="GRAPHIC_ONLY" prefHeight="40.0"
+                styleClass="command-bar-menu-button"
+                AnchorPane.leftAnchor="0"
+                AnchorPane.rightAnchor="0.0"
+                AnchorPane.topAnchor="0.0">
+            <graphic>
+                <HBox styleClass="command-bar-menu-graphic">
+                    <VBox alignment="CENTER" spacing="3.0">
+                        <Line endX="15.0"/>
+                        <Line endX="15.0"/>
+                        <Line endX="15.0"/>
+                    </VBox>
+                </HBox>
+            </graphic>
+        </Button>
+        <MenuButton prefHeight="40.0" styleClass="command-bar-pinned-item" text="Workspaces"
+                    AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0.0"
+                    AnchorPane.topAnchor="45.0"/>
+        <MenuButton prefHeight="40.0" prefWidth="40"
+                    styleClass="command-bar-pinned-item" text="Sources"
+                    AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0.0"
+                    AnchorPane.topAnchor="90.0"/>
+        <MenuButton prefHeight="40.0" prefWidth="40.0"
+                    styleClass="command-bar-pinned-item" text="Worksheets"
+                    AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                    AnchorPane.topAnchor="135.0"/>
+        <MenuButton prefHeight="40.0" styleClass="command-bar-pinned-item"
+                    text="Help" AnchorPane.leftAnchor="0.0"
+                    AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="180.0"/>
+        <Button prefHeight="40.0" styleClass="command-bar-pinned-item" text="Settings"
+                AnchorPane.bottomAnchor="45.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+        <Button contentDisplay="GRAPHIC_ONLY" prefHeight="40.0"
+                styleClass="command-bar-pinned-item,exit" text="Exit"
+                AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+    </DrawerPane>
+
+    <!-- 设置面板 -->
+<!--    <StackPane styleClass="command-bar">-->
+<!--        <fx:include source="PreferencePaneView.fxml"/>-->
+<!--    </StackPane>-->
+</AnchorPane>

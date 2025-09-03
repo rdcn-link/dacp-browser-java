@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefWidth="500.0" prefHeight="600.0" style="-fx-background-color: #F1F3F4;"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="link.rdcn.controller.LoginController">
+
+    <!-- 容器居中 -->
+    <VBox fx:id="loginVBox" layoutX="50" layoutY="50" spacing="20" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+          AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" alignment="CENTER">
+
+        <!-- Logo -->
+        <ImageView fitWidth="120" fitHeight="100">
+            <image>
+                <Image url="@img.png"/>
+            </image>
+        </ImageView>
+
+        <!-- 标题 -->
+        <Label text="欢迎登录" style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #202124;"/>
+
+        <!-- 用户名输入 -->
+        <TextField fx:id="usernameField" promptText="用户名" prefWidth="300" prefHeight="40" maxWidth="300"
+                   style="-fx-font-size: 16px; -fx-background-radius: 6; -fx-padding: 0 10;"/>
+
+        <!-- 密码输入 -->
+        <PasswordField fx:id="passwordField" promptText="密码" prefWidth="300" prefHeight="40" maxWidth="300"
+                       style="-fx-font-size: 16px; -fx-background-radius: 6; -fx-padding: 0 10;"/>
+
+        <!-- 登录按钮 -->
+        <Button text="登    录" onAction="#handleLogin" prefWidth="300" prefHeight="45"
+                style="-fx-background-color: #4285F4; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 6;"/>
+
+        <!-- 辅助链接 -->
+        <HBox spacing="30" alignment="CENTER">
+            <Button text="注册" onAction="#handleRegister" style="-fx-background-color: transparent; -fx-text-fill: #4285F4; -fx-font-size: 14px;"/>
+            <Button text="忘记密码?" onAction="#handleForgotPassword" style="-fx-background-color: transparent; -fx-text-fill: #4285F4; -fx-font-size: 14px;"/>
+        </HBox>
+    </VBox>
+</AnchorPane>

@@ -1,0 +1,10 @@
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.ListView?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="link.rdcn.controller.FavoriteController"
+            prefWidth="400" prefHeight="500">
+
+    <center>
+        <ListView fx:id="favoriteListView"/>
+    </center>
+</BorderPane>
