@@ -103,7 +103,7 @@ override def listDataFrameNames(dataSetId: String): util.List[String] = Arrays.a
     override def schema: StructType = StructType.empty.add("col1", StringType)
 
     override def iterator: ClosableIterator[Row] = {
-      val rows =Seq.range(0, 10).map(index => Row.fromSeq(Seq("id"+index))).toIterator
+      val rows =Seq.range(0, 1000).map(index => Row.fromSeq(Seq("id"+index))).toIterator
       ClosableIterator(rows)()
     }
   }
@@ -150,6 +150,6 @@ class AuthorProviderTest extends AuthProvider {
    */
   override def checkPermission(user: AuthenticatedUser, dataFrameName: String, opList: util.List[DataOperationType]): Boolean = {
     if(user.token == "1") true else false
-//    false
+//    true
   }
 }

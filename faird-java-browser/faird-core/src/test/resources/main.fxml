@@ -21,23 +21,7 @@
     <!-- 顶部导航栏 -->
     <top>
         <VBox spacing="0">
-<!--            <BorderPane style="-fx-background-color: #EAEAEA;">-->
-<!--                &lt;!&ndash; 左侧 TabPane &ndash;&gt;-->
-<!--                <center>-->
-<!--                    <TabPane fx:id="tabPane" tabClosingPolicy="ALL_TABS" style="-fx-background-color: transparent;"/>-->
-<!--                </center>-->
-
-<!--                &lt;!&ndash; 右侧窗口控制按钮 &ndash;&gt;-->
-<!--                <right>-->
-<!--                    <HBox alignment="CENTER" spacing="5" style="-fx-padding: 0 10 0 0;">-->
-<!--                        <Button text="—" onAction="#minimizeWindow"/>-->
-<!--                        <Button text="□" onAction="#maximizeWindow"/>-->
-<!--                        <Button text="✕" onAction="#closeWindow"/>-->
-<!--                    </HBox>-->
-<!--                </right>-->
-<!--            </BorderPane>-->
             <BorderPane fx:id="topBar" style="-fx-background-color: #F5F5F5; -fx-border-color: #DADCE0; -fx-border-width: 0 0 1 0;">
-
                 <!-- 中间 TabPane -->
                 <center>
                     <TabPane fx:id="tabPane" tabClosingPolicy="ALL_TABS"
@@ -135,48 +119,6 @@
                 <padding>
                     <Insets top="40" right="40" bottom="40" left="40"/>
                 </padding>
-
-                <!-- 中心 Logo -->
-<!--                <ImageView fitHeight="150.0" fitWidth="300.0">-->
-<!--                    <image>-->
-<!--                        <Image url="@img.png"/>-->
-<!--                    </image>-->
-<!--                </ImageView>-->
-
-<!--                &lt;!&ndash; 历史/快捷链接面板 &ndash;&gt;-->
-<!--                <FlowPane hgap="15" vgap="15" alignment="CENTER" prefWrapLength="800">-->
-<!--                    <padding>-->
-<!--                        <Insets top="20" right="20" bottom="20" left="20"/>-->
-<!--                    </padding>-->
-
-<!--                    &lt;!&ndash; 示例卡片 &ndash;&gt;-->
-<!--                    <VBox spacing="5" style="-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5,0,0,2);">-->
-<!--                        <padding>-->
-<!--                            <Insets top="15" right="15" bottom="15" left="15"/>-->
-<!--                        </padding>-->
-<!--                        <Label text="查询DataSet列表" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>-->
-<!--                        <Label text="dacp://0.0.0.0:3101/listDataSetNames" style="-fx-font-size: 12px; -fx-text-fill: gray;"/>-->
-<!--                    </VBox>-->
-
-<!--                    <VBox spacing="5" style="-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5,0,0,2);">-->
-<!--                        <padding>-->
-<!--                            <Insets top="15" right="15" bottom="15" left="15"/>-->
-<!--                        </padding>-->
-<!--                        <Label text="查询DataFrame列表" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>-->
-<!--                        <Label text="dacp://0.0.0.0:3101/listDataFrameNames/dataSet1" style="-fx-font-size: 12px; -fx-text-fill: gray;"/>-->
-<!--                    </VBox>-->
-
-<!--                    <VBox spacing="5" style="-fx-background-color: white; -fx-background-radius: 15; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5,0,0,2);">-->
-<!--                        <padding>-->
-<!--                            <Insets top="15" right="15" bottom="15" left="15"/>-->
-<!--                        </padding>-->
-<!--                        <Label text="查询DataFrame详细数据" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>-->
-<!--                        <Label text="dacp://0.0.0.0:3101/get/dataFrame1" style="-fx-font-size: 12px; -fx-text-fill: gray;"/>-->
-<!--                        <HBox alignment="BOTTOM_RIGHT">-->
-<!--                            <Label text="查看更多历史" style="-fx-text-fill: #4285F4; -fx-font-size: 12px; -fx-cursor: hand;"/>-->
-<!--                        </HBox>-->
-<!--                    </VBox>-->
-<!--                </FlowPane>-->
             </VBox>
         </StackPane>
     </center>

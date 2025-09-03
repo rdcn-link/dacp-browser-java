@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.Pagination?>
+
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:id="rootPane"
@@ -15,65 +12,22 @@
             stylesheets="@style_fx.css"
             style="-fx-background-color: #F1F3F4;">
 
-    <!-- 顶部标题栏 -->
-    <top>
-        <HBox alignment="CENTER_LEFT" spacing="20"
-              style="-fx-background-color: #FFFFFF; -fx-border-color: #DADCE0; -fx-border-width: 0 0 1 0; -fx-padding: 20;">
-            <!-- 左边标题部分 -->
-            <VBox alignment="CENTER_LEFT" spacing="8">
-                <Label text="数据展示"
-                       style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #202124;"/>
-                <Label fx:id="subtitleLabel1" text="通过 URL 获取的数据"
-                       style="-fx-font-size: 16px; -fx-text-fill: #5F6368;"/>
-            </VBox>
-
-            <!-- 占位，撑开中间空间 -->
-            <Region HBox.hgrow="ALWAYS"/>
-
-            <!-- 右边收藏按钮 -->
-            <Button fx:id="favoriteButton1" text="★ 收藏"
-                    style="-fx-background-color: #4285F4; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 6 16;"/>
-        </HBox>
-    </top>
-
-    <!-- 中间内容区 -->
     <center>
+        <VBox fx:id="listContainer" VBox.vgrow="ALWAYS">
 
-        <VBox fx:id="listContainer" alignment="TOP_CENTER" spacing="20" VBox.vgrow="ALWAYS"
-              style="-fx-padding: 30;">
-
-            <!-- 顶部标题 + 收藏按钮 -->
-            <HBox alignment="CENTER_LEFT" spacing="20"
-                  style="-fx-background-color: #FFFFFF; -fx-border-color: #DADCE0; -fx-border-width: 0 0 1 0; -fx-padding: 20;">
-
-                <!-- 左边标题部分 -->
-                <VBox alignment="CENTER_LEFT" spacing="8">
-                    <Label text="数据展示"
-                           style="-fx-font-size: 26px; -fx-font-weight: bold; -fx-text-fill: #202124;"/>
-                    <Label fx:id="subtitleLabel" text="通过 URL 获取的数据"
-                           style="-fx-font-size: 16px; -fx-text-fill: #5F6368;"/>
-                </VBox>
-
-                <Region HBox.hgrow="ALWAYS"/>
-
-                <!-- 收藏按钮 -->
-                <Button fx:id="favoriteButton" text="★ 收藏"
-                        style="-fx-background-color: #4285F4; -fx-text-fill: white; -fx-font-size: 14px; -fx-padding: 6 16;"/>
-            </HBox>
-
-            <!-- TableView 占剩余空间 -->
             <TableView fx:id="tableView" VBox.vgrow="ALWAYS"
                        style="
-                    -fx-font-size: 16px;
-                    -fx-background-color: white;
-                    -fx-border-color: #DADCE0;
-                    -fx-border-radius: 10;
-                    -fx-background-radius: 10;
-                    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 12,0,0,6);
-               ">
-                <!-- 列动态生成 -->
+                            -fx-font-size: 16px;
+                            -fx-background-color: white;
+                            -fx-border-color: #DADCE0;
+                            -fx-border-radius: 10;
+                            -fx-background-radius: 10;
+                            -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 12,0,0,6);
+                       ">
             </TableView>
-        </VBox>
 
+            <Pagination fx:id="pagination" style="-fx-background-color: transparent; -fx-padding: 10 0 0 0;"/>
+
+        </VBox>
     </center>
 </BorderPane>

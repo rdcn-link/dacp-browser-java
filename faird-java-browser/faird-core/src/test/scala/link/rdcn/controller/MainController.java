@@ -45,8 +45,10 @@ public class MainController {
 
     @FXML
     private TabPane tabPane;
+
     @FXML
-    private StackPane contentPane;
+    protected StackPane contentPane;
+
     @FXML
     private BorderPane rootPane;
 
@@ -141,28 +143,13 @@ public class MainController {
         });
 
         back2main.setOnMouseClicked(event -> {
-            // 1. 加载主页中心部分 FXML（例如 home.fxml）
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/main.fxml"));
-            BorderPane homeCenter = null; // 根节点是 VBox
-            try {
-                homeCenter = loader.load();
-
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-
-            // 2. 清空主界面 center 并替换
             contentPane.getChildren().clear();
-            Node listCenter = homeCenter.getCenter(); // 只取 list.fxml 中心内容
-            contentPane.getChildren().add(listCenter);
         });
 
         Platform.runLater(() -> {
             // 获取 Stage
 //            Stage stage = (Stage) tabPane.getScene().getWindow();
             Stage stage = getStage();
-
-
             tabPane.setOnMousePressed(event -> {
                 xOffset = event.getSceneX();
                 yOffset = event.getSceneY();
@@ -301,13 +288,10 @@ public class MainController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/favorite.fxml"));
             BorderPane favoriteRoot = loader.load();
-
             FavoriteController controller = loader.getController();
             controller.setMainController(this); // 注入 TestController
-
             contentPane.getChildren().clear();
             contentPane.getChildren().add(favoriteRoot);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -335,7 +319,6 @@ public class MainController {
                 loginStage.setScene(new Scene(root));
                 loginStage.setResizable(false);
                 loginStage.showAndWait(); // 如果希望等待用户关闭再继续
-
                 return;
             }
             // 2. 获取 DataFrame
@@ -346,17 +329,16 @@ public class MainController {
                 BorderPane listRoot = loader.load();
                 // 4. 传递 DataFrame 给 ListController
                 ListController controller = loader.getController();
-                controller.setUrl(url);
+//                controller.setUrl(url);
                 controller.setCurrentUrl(url);
                 controller.setDataFrame(df);
                 controller.setMainController(this);
                 // 替换 center 内容
                 contentPane.getChildren().clear();
-                Node listCenter = listRoot.getCenter(); // 只取 list.fxml 中心内容
-                contentPane.getChildren().add(listCenter);
+                contentPane.getChildren().add(listRoot);
+
             }catch (Exception e){
                 System.out.println(e.getMessage());
-
                 if (e.getMessage().contains("DataFrame is not accessible")){
                     Platform.runLater(() -> {
                         Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -370,7 +352,6 @@ public class MainController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     public void skipQueryList(String skipURL){
