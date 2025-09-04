@@ -1,4 +1,5 @@
 package link.rdcn.controller;
+
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -14,6 +15,7 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
@@ -23,13 +25,31 @@ import link.rdcn.server.AuthorProviderTest;
 import link.rdcn.server.DataProviderTest;
 import link.rdcn.server.DataReceiverTest;
 import link.rdcn.server.dacp.DacpServer;
+import link.rdcn.struct.Column;
 import link.rdcn.struct.DataFrame;
+import link.rdcn.struct.Row;
 import link.rdcn.user.Credentials;
 import scala.Array;
+import scala.collection.JavaConverters;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.Stack;
 
 public class MainController {
+
+    @FXML
+    private Button backButton;
+    @FXML
+    private Button forwardButton;
+
+    private String currentUrl = "";
+
+
+    private DataFrame currentDf;
+
 
     @FXML
     private TextField usernameField;
@@ -56,8 +76,8 @@ public class MainController {
     @FXML
     private ImageView userIcon;
     // 左上角退回主页图标
-    @FXML
-    private ImageView back2main;
+//    @FXML
+//    private ImageView back2main;
 
     @FXML
     private Button starButton;
@@ -79,6 +99,76 @@ public class MainController {
     ContextMenu userMenu = new ContextMenu();
     MenuItem usernameItem = new MenuItem();
     MenuItem logoutItem = new MenuItem("退出登录");
+
+
+    private final Stack<String> backStack = new Stack<>();   // 回退历史
+    private final Stack<String> forwardStack = new Stack<>(); // 前进历史
+
+    private void queryAndShowWithoutStack(String url) {
+        try {
+            inputField.setText(url);
+
+            DataFrame df = dacpClient.get(url, Array.emptyByteArray());
+            currentDf = df;
+
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
+            BorderPane listRoot = loader.load();
+
+            ListController controller = loader.getController();
+            controller.setCurrentUrl(url);
+            controller.setDataFrame(df);
+            controller.setMainController(this);
+
+            contentPane.getChildren().clear();
+            contentPane.getChildren().add(listRoot);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void refreshPage(){
+        System.out.println("Attempting to refresh page for URL: " + this.currentUrl);
+
+        // 1. 检查当前是否存在可以刷新的URL
+        //    如果 currentUrl 为空或空白，说明当前是主页或未进行任何查询，无需刷新
+        if (this.currentUrl != null && !this.currentUrl.isEmpty()) {
+
+            // 2. 直接使用当前页面的URL调用 queryAndShow 方法
+            //    该方法会异步重新获取数据并刷新界面
+            queryAndShow(this.currentUrl);
+
+        } else {
+            // (可选) 如果没有页面可以刷新，可以在控制台打印一条信息
+            System.out.println("No active page to refresh.");
+        }
+    }
+
+
+    @FXML
+    private void goBack() {
+        if (!backStack.isEmpty()) {
+            // 1. 将当前页面URL压入前进栈
+            forwardStack.push(this.currentUrl);
+            // 2. 从后退栈中弹出目标URL
+            String previousUrl = backStack.pop();
+            // 3. 显示目标页面
+            queryAndShow(previousUrl);
+        }
+    }
+
+    @FXML
+    private void goForward() {
+        if (!forwardStack.isEmpty()) {
+            // 1. 将当前页面URL压入后退栈
+            backStack.push(this.currentUrl);
+            // 2. 从前进栈中弹出目标URL
+            String nextUrl = forwardStack.pop();
+            // 3. 显示目标页面
+            queryAndShow(nextUrl);
+        }
+    }
 
 
     protected void setDacpClient(DacpClient dacpClient) {
@@ -103,6 +193,12 @@ public class MainController {
         if (dacpClient == null) {
             dacpClient = getClient();
         }
+
+        backButton.setDisable(backStack.isEmpty());
+        forwardButton.setDisable(forwardStack.isEmpty());
+
+        inputField.setOnAction(this::queryList);
+
         inputField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (FavoriteManager.containFavorites(newVal)) {
                 // 已收藏 -> 高亮
@@ -142,9 +238,9 @@ public class MainController {
             userMenu.show(userIcon, Side.BOTTOM, 0, 5); // 在头像下方弹出
         });
 
-        back2main.setOnMouseClicked(event -> {
-            contentPane.getChildren().clear();
-        });
+//        back2main.setOnMouseClicked(event -> {
+//            contentPane.getChildren().clear();
+//        });
 
         Platform.runLater(() -> {
             // 获取 Stage
@@ -269,6 +365,45 @@ public class MainController {
     }
 
     @FXML
+    private void downloadFile() {
+        System.out.println("downloading!!!");
+        if (currentDf == null) {
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("保存为 CSV 文件");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("CSV 文件", "*.csv")
+        );
+        File file = fileChooser.showSaveDialog(rootPane.getScene().getWindow());
+
+        if (file != null) {
+            try (FileWriter writer = new FileWriter(file)) {
+                // 写表头
+                java.util.List<Column> javaFields = JavaConverters.seqAsJavaList(currentDf.schema().columns().toSeq());
+                writer.write(String.join(",", javaFields.stream().map(Column::name).toArray(String[]::new)));
+                writer.write("\n");
+
+                // 写数据
+                List<Row> rows = JavaConverters.seqAsJavaList(currentDf.collect().toSeq());
+                for (Row row : rows) {
+                    for (int i = 0; i < javaFields.size(); i++) {
+                        Object value = row.get(i);
+                        writer.write(value != null ? value.toString() : "");
+                        if (i < javaFields.size() - 1) {
+                            writer.write(",");
+                        }
+                    }
+                    writer.write("\n");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @FXML
     private void handleStar(ActionEvent event) {
         String currentUrl = inputField.getText();
         isCollected = !isCollected;
@@ -297,7 +432,9 @@ public class MainController {
         }
     }
 
-    private void queryAndShow(String url){
+    private void queryAndShow(String url) {
+
+
         try {
             if (url.contains("/get/") && !this.loggedIn) {
                 // 弹出登录提示
@@ -324,6 +461,7 @@ public class MainController {
             // 2. 获取 DataFrame
             try {
                 DataFrame df = dacpClient.get(url, Array.emptyByteArray());
+                currentDf = df;
                 // 3. 加载 list.fxml
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
                 BorderPane listRoot = loader.load();
@@ -337,9 +475,28 @@ public class MainController {
                 contentPane.getChildren().clear();
                 contentPane.getChildren().add(listRoot);
 
-            }catch (Exception e){
+                this.currentUrl = url;
+                // 确保输入框与当前页面URL同步
+                inputField.setText(url);
+
+                backButton.setDisable(backStack.isEmpty());
+                forwardButton.setDisable(forwardStack.isEmpty());
+
+
+
+//                if (currentDf != null) {
+//                    // 保存当前 URL 到回退栈
+//                    backStack.push(inputField.getText());
+//                    forwardStack.clear(); // 新访问，清空前进历史
+//                }
+//
+//                System.out.println(backButton.isDisabled());
+//                System.out.println(forwardButton.isDisabled());
+
+
+            } catch (Exception e) {
                 System.out.println(e.getMessage());
-                if (e.getMessage().contains("DataFrame is not accessible")){
+                if (e.getMessage().contains("DataFrame is not accessible")) {
                     Platform.runLater(() -> {
                         Alert alert = new Alert(Alert.AlertType.WARNING);
                         alert.setTitle("权限不足");
@@ -354,20 +511,55 @@ public class MainController {
         }
     }
 
-    public void skipQueryList(String skipURL){
-        String url = skipURL;
-        queryAndShow(url);
+    public void skipQueryList(String skipURL) {
+        // 检查目标URL是否有效，以及是否与当前页面相同，避免不必要的重复加载
+        if (skipURL == null || skipURL.trim().isEmpty() || skipURL.equals(this.currentUrl)) {
+            return;
+        }
+
+        // 同样地，将当前页面URL存入后退历史
+        // 确保 currentUrl 已经有值（不是第一次加载）
+        if (!this.currentUrl.isEmpty()) {
+            backStack.push(this.currentUrl);
+        }
+
+        // 清空前进历史，因为这是一次新的导航路径
+        forwardStack.clear();
+
+        // 最后，调用 queryAndShow 去加载新页面的内容
+        queryAndShow(skipURL);
     }
+
 
     @FXML
     void queryList(ActionEvent event) {
-        try {
-            String url = inputField.getText();
-            System.out.println("输入的 URL: " + url);
-            queryAndShow(url);
-        } catch (Exception e) {
-            e.printStackTrace();
+//        try {
+//            String url = inputField.getText();
+//            System.out.println("输入的 URL: " + url);
+//
+//            queryAndShow(url);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+        String newUrl = inputField.getText();
+        System.out.println("输入的 URL: " + newUrl);
+
+        // 如果新URL和当前URL相同，或者为空，则不执行任何操作
+        if (newUrl == null || newUrl.trim().isEmpty() || newUrl.equals(this.currentUrl)) {
+            return;
         }
+
+        // 核心逻辑：
+        // 1. 如果当前 URL 不为空，将其压入后退栈，因为它即将成为历史
+        if (!this.currentUrl.isEmpty()) {
+            backStack.push(this.currentUrl);
+        }
+        // 2. 用户发起了新的导航，前进历史应该被清空
+        forwardStack.clear();
+
+        // 3. 调用重构后的方法去加载内容
+        queryAndShow(newUrl);
+
     }
 
     @FXML

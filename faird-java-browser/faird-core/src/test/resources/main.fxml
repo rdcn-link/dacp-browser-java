@@ -59,13 +59,42 @@
                 </padding>
 
                 <!-- Logo -->
-                <ImageView fx:id="back2main" fitHeight="40" fitWidth="40">
-                    <image>
-                        <Image url="@浏览器.png"/>
-                    </image>
-                </ImageView>
+<!--                <ImageView fx:id="back2main" fitHeight="40" fitWidth="40">-->
+<!--                    <image>-->
+<!--                        <Image url="@浏览器.png"/>-->
+<!--                    </image>-->
+<!--                </ImageView>-->
 
-<!--                <padding>-->
+                <Button fx:id="backButton" text="◀"
+                        style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;" onAction="#goBack">
+                    <padding>
+                        <Insets top="0" right="5" bottom="0" left="0"/> <!-- 单独设置右侧间距 -->
+                    </padding>
+                </Button>
+                <!-- 前进按钮 -->
+                <Button fx:id="forwardButton" text="▶"
+                        style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;" onAction="#goForward">
+                    <padding>
+                        <Insets top="0" right="5" bottom="0" left="0"/> <!-- 单独设置右侧间距 -->
+                    </padding>
+                </Button>
+
+                <!-- 刷新按钮 -->
+                <Button fx:id="refreshButton" onAction="#refreshPage"
+                        style="-fx-background-color: transparent; -fx-cursor: hand;">
+                    <graphic>
+                        <ImageView fitWidth="15" fitHeight="15">
+                            <image>
+                                <Image url="@刷新.png"/>
+                            </image>
+                        </ImageView>
+                    </graphic>
+                    <padding>
+                        <Insets top="0" right="5" bottom="0" left="0"/>
+                    </padding>
+                </Button>
+
+                <!--                <padding>-->
 <!--                    <Insets top="10" right="10" bottom="10" left="10"/>-->
 <!--                </padding>-->
 
@@ -81,7 +110,7 @@
                                       -fx-border-radius: 20;
                                       -fx-border-color: #DADCE0;
                                       -fx-border-width: 1;
-                                      -fx-padding: 0 10 0 30;
+                                      -fx-padding: 0 60 0 30;
                                       -fx-font-size: 15px;
                                       -fx-focus-color: transparent;
                                       -fx-faint-focus-color: transparent;"/>
@@ -92,15 +121,15 @@
                 </StackPane>
 
                 <!-- 查询按钮 -->
-                <MFXButton text="查  询"
+                <MFXButton text="下载"
                            fx:id="queryButton"
-                           onAction="#queryList"
+                           onAction="#downloadFile"
                            prefHeight="40"
-                           prefWidth="100"
+                           prefWidth="60"
                            style="-fx-background-radius: 20;
                                   -fx-background-color: #E0E0E0;
                                   -fx-text-fill: #202124;
-                                  -fx-font-size: 18px;"/>
+                                  -fx-font-size: 15px;"/>
 
                 <!-- 用户图标 -->
                 <ImageView fx:id="userIcon" fitWidth="40" fitHeight="40" pickOnBounds="true" >
