@@ -63,7 +63,11 @@ public class ListController {
             final int index = colIndex;
             Column field = javaFields.get(colIndex);
 
-            TableColumn<Row, String> column = new TableColumn<>(field.name());
+            String colName = field.name();
+            String colType = field.colType().toString();
+
+            TableColumn<Row, String> column = new TableColumn<>(colName + " : " + colType);
+
 
             column.setCellValueFactory(cellData -> {
                 Row row = cellData.getValue();

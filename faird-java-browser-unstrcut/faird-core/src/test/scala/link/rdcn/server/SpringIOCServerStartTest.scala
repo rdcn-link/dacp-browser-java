@@ -97,16 +97,53 @@ override def listDataFrameNames(dataSetId: String): util.List[String] = Arrays.a
    * @param dataFrameName 数据帧名（如 mnt/a.csv)
    * @return 数据流源
    */
+//  override def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
+//    override def rowCount: Long = -1
+//
+//    override def schema: StructType = StructType.empty.add("col1", StringType)
+//
+//    override def iterator: ClosableIterator[Row] = {
+//      val rows =Seq.range(0, 1000).map(index => Row.fromSeq(Seq("id"+index))).toIterator
+//      ClosableIterator(rows)()
+//    }
+//  }
   override def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
     override def rowCount: Long = -1
 
-    override def schema: StructType = StructType.empty.add("col1", StringType)
+    // 定义 10 列
+    override def schema: StructType = StructType.empty
+      .add("col1", StringType)
+      .add("col2", StringType)
+      .add("col3", StringType)
+      .add("col4", StringType)
+      .add("col5", StringType)
+      .add("col6", StringType)
+      .add("col7", StringType)
+      .add("col8", StringType)
+      .add("col9", StringType)
+      .add("col10", StringType)
 
     override def iterator: ClosableIterator[Row] = {
-      val rows =Seq.range(0, 1000).map(index => Row.fromSeq(Seq("id"+index))).toIterator
+      val rows = Seq.range(0, 1000).map { index =>
+        // 每行生成 10 列示例数据
+        Row.fromSeq(Seq(
+          s"id$index",
+          s"name$index",
+          s"type$index",
+          s"value$index",
+          s"status$index",
+          s"col6_$index",
+          s"col7_$index",
+          s"col8_$index",
+          s"col9_$index",
+          s"col10_$index"
+        ))
+      }.toIterator
       ClosableIterator(rows)()
     }
   }
+
+
 
   /**
    * 获取数据帧详细信息

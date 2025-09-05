@@ -102,7 +102,7 @@
 
                 <!-- 搜索框 -->
                 <StackPane HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
-                    <TextField fx:id="inputField" promptText="搜索或输入 URL"
+                    <TextField fx:id="inputField" promptText="Enter URL"
                                prefHeight="40"
                                HBox.hgrow="ALWAYS"
                                style="-fx-background-color: #F1F3F4;
@@ -120,16 +120,28 @@
                             onAction="#handleStar"/>
                 </StackPane>
 
-                <!-- 查询按钮 -->
-                <MFXButton text="下载"
-                           fx:id="queryButton"
-                           onAction="#downloadFile"
-                           prefHeight="40"
-                           prefWidth="60"
-                           style="-fx-background-radius: 20;
-                                  -fx-background-color: #E0E0E0;
-                                  -fx-text-fill: #202124;
-                                  -fx-font-size: 15px;"/>
+                <!-- 下载按钮 -->
+<!--                <MFXButton text="down"-->
+<!--                           fx:id="queryButton"-->
+<!--                           onAction="#downloadFile"-->
+<!--                           prefHeight="40"-->
+<!--                           prefWidth="80"-->
+<!--                           style="-fx-background-radius: 20;-->
+<!--                                  -fx-background-color: #E0E0E0;-->
+<!--                                  -fx-text-fill: #202124;-->
+<!--                                  -fx-font-size: 15px;"/>-->
+                <Button fx:id="downloadButton"
+                        onAction="#downloadFile"
+                        prefHeight="40"
+                        prefWidth="40"
+                        style="-fx-background-color: transparent; -fx-cursor: hand;">
+                    <graphic>
+                        <ImageView fitWidth="30" fitHeight="30" preserveRatio="true">
+                            <Image url="@下载图标.png"/>
+                        </ImageView>
+                    </graphic>
+                </Button>
+
 
                 <!-- 用户图标 -->
                 <ImageView fx:id="userIcon" fitWidth="40" fitHeight="40" pickOnBounds="true" >
@@ -151,4 +163,14 @@
             </VBox>
         </StackPane>
     </center>
+
+    <!-- 底部状态栏 -->
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" style="-fx-background-color: transparent;">
+            <Label fx:id="runtimeLabel"
+                   text="Run Time: 00:00:00.000"
+                   style="-fx-text-fill: #666666; -fx-font-size: 12px; -fx-padding: 5 10 5 0;"/>
+        </HBox>
+    </bottom>
+
 </BorderPane>

@@ -47,9 +47,7 @@ public class MainController {
 
     private String currentUrl = "";
 
-
     private DataFrame currentDf;
-
 
     @FXML
     private TextField usernameField;
@@ -59,9 +57,9 @@ public class MainController {
     protected TextField inputField;
 
     @FXML
-    private Button loginButton; // 右上角登录按钮
+    private Button loginButton; // top-right login button
     @FXML
-    private Button registerButton; // 右上角注册按钮
+    private Button registerButton; // top-right register button
 
     @FXML
     private TabPane tabPane;
@@ -72,37 +70,41 @@ public class MainController {
     @FXML
     private BorderPane rootPane;
 
-    // 右上角用户图标
+    // top-right user icon
     @FXML
     private ImageView userIcon;
-    // 左上角退回主页图标
+    // top-left back-to-home icon
 //    @FXML
 //    private ImageView back2main;
 
     @FXML
     private Button starButton;
 
-    // 状态变量
+    @FXML
+    private Label runtimeLabel;
+
+    private long startTime;
+
+    // state
     private boolean isCollected = false;
-    private boolean loggedIn = false; // 登录状态示例
-    private String username = "Alice"; // 登录用户名示例
+    private boolean loggedIn = false; // login state example
+    private String username = "Alice"; // logged-in username example
     private double xOffset = 0;
     private double yOffset = 0;
     private double prevX, prevY, prevWidth, prevHeight;
     private boolean maximized = false;
 
-    // DACP服务器
+    // DACP server
     private static DacpServer dacpServer;
     private DacpClient dacpClient;
 
-    // 创建用户下拉菜单
+    // user dropdown menu
     ContextMenu userMenu = new ContextMenu();
     MenuItem usernameItem = new MenuItem();
-    MenuItem logoutItem = new MenuItem("退出登录");
+    MenuItem logoutItem = new MenuItem("Log out");
 
-
-    private final Stack<String> backStack = new Stack<>();   // 回退历史
-    private final Stack<String> forwardStack = new Stack<>(); // 前进历史
+    private final Stack<String> backStack = new Stack<>();   // back history
+    private final Stack<String> forwardStack = new Stack<>(); // forward history
 
     private void queryAndShowWithoutStack(String url) {
         try {
@@ -130,30 +132,18 @@ public class MainController {
     @FXML
     private void refreshPage(){
         System.out.println("Attempting to refresh page for URL: " + this.currentUrl);
-
-        // 1. 检查当前是否存在可以刷新的URL
-        //    如果 currentUrl 为空或空白，说明当前是主页或未进行任何查询，无需刷新
         if (this.currentUrl != null && !this.currentUrl.isEmpty()) {
-
-            // 2. 直接使用当前页面的URL调用 queryAndShow 方法
-            //    该方法会异步重新获取数据并刷新界面
             queryAndShow(this.currentUrl);
-
         } else {
-            // (可选) 如果没有页面可以刷新，可以在控制台打印一条信息
             System.out.println("No active page to refresh.");
         }
     }
 
-
     @FXML
     private void goBack() {
         if (!backStack.isEmpty()) {
-            // 1. 将当前页面URL压入前进栈
             forwardStack.push(this.currentUrl);
-            // 2. 从后退栈中弹出目标URL
             String previousUrl = backStack.pop();
-            // 3. 显示目标页面
             queryAndShow(previousUrl);
         }
     }
@@ -161,15 +151,11 @@ public class MainController {
     @FXML
     private void goForward() {
         if (!forwardStack.isEmpty()) {
-            // 1. 将当前页面URL压入后退栈
             backStack.push(this.currentUrl);
-            // 2. 从前进栈中弹出目标URL
             String nextUrl = forwardStack.pop();
-            // 3. 显示目标页面
             queryAndShow(nextUrl);
         }
     }
-
 
     protected void setDacpClient(DacpClient dacpClient) {
         if (this.dacpClient != null) {
@@ -178,13 +164,12 @@ public class MainController {
         this.dacpClient = dacpClient;
     }
 
-
     private Stage getStage() {
         if (contentPane != null && contentPane.getScene() != null) {
             return (Stage) contentPane.getScene().getWindow();
         } else {
-            // 兜底处理，可以返回 null 或抛异常
-            throw new IllegalStateException("Stage 未初始化");
+            // fallback: stage not initialized
+            throw new IllegalStateException("Stage not initialized");
         }
     }
 
@@ -201,41 +186,40 @@ public class MainController {
 
         inputField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (FavoriteManager.containFavorites(newVal)) {
-                // 已收藏 -> 高亮
+                // favorited -> highlight
                 isCollected = true;
                 starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFD700; -fx-font-size: 18px;");
             } else {
-                // 未收藏 -> 变灰
+                // not favorited -> gray
                 isCollected = false;
                 starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #999999; -fx-font-size: 18px;");
             }
         });
 
-        // 未登录状态
-        MenuItem loginItem = new MenuItem("登录");
+        // menu items for not-logged-in state
+        MenuItem loginItem = new MenuItem("Login");
         loginItem.setOnAction(e -> login());
-        MenuItem registerItem = new MenuItem("注册");
+        MenuItem registerItem = new MenuItem("Register");
         registerItem.setOnAction(e -> register());
 
-        MenuItem favoriteItem = new MenuItem("收藏历史");
+        MenuItem favoriteItem = new MenuItem("Favorites");
         favoriteItem.setOnAction(event -> openFavorites());
 
-        // 已登录状态
-        // 显示用户名
+        // logged-in state
         logoutItem.setOnAction(e -> logout());
 
-        // 点击头像显示菜单
+        // click avatar to show menu
         userIcon.setOnMouseClicked(event -> {
-            userMenu.getItems().clear(); // 清空之前内容
+            userMenu.getItems().clear();
 
             if (loggedIn) {
                 usernameItem.setText(username);
-                usernameItem.setDisable(true); // 只是显示，不可点击
+                usernameItem.setDisable(true);
                 userMenu.getItems().addAll(usernameItem, favoriteItem, logoutItem);
             } else {
                 userMenu.getItems().addAll(loginItem, registerItem);
             }
-            userMenu.show(userIcon, Side.BOTTOM, 0, 5); // 在头像下方弹出
+            userMenu.show(userIcon, Side.BOTTOM, 0, 5);
         });
 
 //        back2main.setOnMouseClicked(event -> {
@@ -243,7 +227,7 @@ public class MainController {
 //        });
 
         Platform.runLater(() -> {
-            // 获取 Stage
+            // get Stage
 //            Stage stage = (Stage) tabPane.getScene().getWindow();
             Stage stage = getStage();
             tabPane.setOnMousePressed(event -> {
@@ -261,24 +245,24 @@ public class MainController {
     public void setLoggedIn(String username) {
         this.loggedIn = true;
         this.username = username;
-        // 可以在这里更新用户头像右上角显示用户名
+        // update user info on top-right
         updateUserInfo();
     }
 
     private void updateUserInfo() {
-        // 示例：更新右上角 Label
+        // example: update top-right label
         if (loggedIn) {
             userMenu.getItems().clear();
             usernameItem.setText(username);
-            usernameItem.setDisable(true); // 只是显示，不可点击
+            usernameItem.setDisable(true);
             userMenu.getItems().addAll(usernameItem, logoutItem);
         }
     }
 
-    // 登录示例方法
+    // login example
     private void login() {
 
-        System.out.println("执行登录逻辑...");
+        System.out.println("Executing login logic...");
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             AnchorPane loginRoot = loader.load();
@@ -286,30 +270,30 @@ public class MainController {
             LoginController loginController = loader.getController();
             loginController.setMainController(this);
 
-            // 创建新的 Stage
+            // create new Stage
             Stage loginStage = new Stage();
-            // 设置父窗口
+            // set owner
             loginStage.initOwner(contentPane.getScene().getWindow());
-            loginStage.initModality(Modality.APPLICATION_MODAL); // 阻塞主窗口
-            loginStage.setTitle("登录");
+            loginStage.initModality(Modality.APPLICATION_MODAL); // block parent window
+            loginStage.setTitle("Login");
             loginStage.setScene(new Scene(loginRoot));
             loginStage.setResizable(false);
-            loginStage.showAndWait(); // 显示并等待关闭
+            loginStage.showAndWait();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // 注册示例方法
+    // register example
     private void register() {
-        System.out.println("执行注册逻辑...");
+        System.out.println("Executing registration logic...");
     }
 
-    // 退出登录
+    // logout
     private void logout() {
         loggedIn = false;
         username = "";
-        System.out.println("已退出登录");
+        System.out.println("Logged out");
     }
 
     @FXML
@@ -324,13 +308,13 @@ public class MainController {
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
         if (!maximized) {
-            // 保存当前窗口大小和位置
+            // save current window position & size
             prevX = stage.getX();
             prevY = stage.getY();
             prevWidth = stage.getWidth();
             prevHeight = stage.getHeight();
 
-            // 最大化到屏幕可用区域（像 Chrome 一样）
+            // maximize to visual bounds
             stage.setX(screenBounds.getMinX());
             stage.setY(screenBounds.getMinY());
             stage.setWidth(screenBounds.getWidth());
@@ -338,7 +322,7 @@ public class MainController {
 
             maximized = true;
         } else {
-            // 恢复到之前的窗口大小（例如 70% 屏幕大小）
+            // restore
             stage.setX(prevX);
             stage.setY(prevY);
             stage.setWidth(prevWidth);
@@ -372,20 +356,20 @@ public class MainController {
         }
 
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("保存为 CSV 文件");
+        fileChooser.setTitle("Save as CSV File");
         fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("CSV 文件", "*.csv")
+                new FileChooser.ExtensionFilter("CSV File", "*.csv")
         );
         File file = fileChooser.showSaveDialog(rootPane.getScene().getWindow());
 
         if (file != null) {
             try (FileWriter writer = new FileWriter(file)) {
-                // 写表头
+                // write header
                 java.util.List<Column> javaFields = JavaConverters.seqAsJavaList(currentDf.schema().columns().toSeq());
                 writer.write(String.join(",", javaFields.stream().map(Column::name).toArray(String[]::new)));
                 writer.write("\n");
 
-                // 写数据
+                // write rows
                 List<Row> rows = JavaConverters.seqAsJavaList(currentDf.collect().toSeq());
                 for (Row row : rows) {
                     for (int i = 0; i < javaFields.size(); i++) {
@@ -409,11 +393,11 @@ public class MainController {
         isCollected = !isCollected;
         if (isCollected) {
             starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFD700; -fx-font-size: 18px;");
-            System.out.println("收藏 URL: " + currentUrl);
+            System.out.println("Favorited URL: " + currentUrl);
             FavoriteManager.addFavorite(currentUrl);
         } else {
             starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #999999; -fx-font-size: 18px;");
-            System.out.println("取消收藏 URL: " + currentUrl);
+            System.out.println("Unfavorited URL: " + currentUrl);
             FavoriteManager.removeFavorite(currentUrl);
         }
     }
@@ -424,7 +408,7 @@ public class MainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/favorite.fxml"));
             BorderPane favoriteRoot = loader.load();
             FavoriteController controller = loader.getController();
-            controller.setMainController(this); // 注入 TestController
+            controller.setMainController(this); // inject TestController
             contentPane.getChildren().clear();
             contentPane.getChildren().add(favoriteRoot);
         } catch (Exception e) {
@@ -434,74 +418,72 @@ public class MainController {
 
     private void queryAndShow(String url) {
 
-
         try {
             if (url.contains("/get/") && !this.loggedIn) {
-                // 弹出登录提示
+                // show login required
                 Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("权限不足");
+                alert.setTitle("Access Denied");
                 alert.setHeaderText(null);
-                alert.setContentText("访问此数据需要登录，请先登录！");
+                alert.setContentText("This data requires sign-in. Please log in first!");
                 alert.showAndWait();
 
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
                 Parent root = loader.load();
-                // 获取 login.fxml 的控制器
+                // get controller
                 LoginController loginController = loader.getController();
                 loginController.setMainController(this);
-                // 打开登录弹窗
+                // open login dialog
                 Stage loginStage = new Stage();
-                loginStage.initModality(Modality.APPLICATION_MODAL); // 阻塞父窗口
-                loginStage.setTitle("用户登录");
+                loginStage.initModality(Modality.APPLICATION_MODAL); // block parent
+                loginStage.setTitle("User Login");
                 loginStage.setScene(new Scene(root));
                 loginStage.setResizable(false);
-                loginStage.showAndWait(); // 如果希望等待用户关闭再继续
+                loginStage.showAndWait();
                 return;
             }
-            // 2. 获取 DataFrame
+            // 2. get DataFrame
             try {
+                startTime = System.currentTimeMillis();
                 DataFrame df = dacpClient.get(url, Array.emptyByteArray());
+                long elapsed = System.currentTimeMillis() - startTime;
+
+                long hours = elapsed / (1000 * 60 * 60);
+                long minutes = (elapsed / (1000 * 60)) % 60;
+                long seconds = (elapsed / 1000) % 60;
+                long millis = elapsed % 1000;
+
+                String time = String.format("Run Time: %02d:%02d:%02d.%03d", hours, minutes, seconds, millis);
+                runtimeLabel.setText(time);
+
                 currentDf = df;
-                // 3. 加载 list.fxml
+                // 3. load list.fxml
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
                 BorderPane listRoot = loader.load();
-                // 4. 传递 DataFrame 给 ListController
+                // 4. pass DataFrame to ListController
                 ListController controller = loader.getController();
 //                controller.setUrl(url);
                 controller.setCurrentUrl(url);
                 controller.setDataFrame(df);
                 controller.setMainController(this);
-                // 替换 center 内容
+                // replace center content
                 contentPane.getChildren().clear();
                 contentPane.getChildren().add(listRoot);
 
                 this.currentUrl = url;
-                // 确保输入框与当前页面URL同步
+                // keep input field synced
                 inputField.setText(url);
 
                 backButton.setDisable(backStack.isEmpty());
                 forwardButton.setDisable(forwardStack.isEmpty());
-
-
-
-//                if (currentDf != null) {
-//                    // 保存当前 URL 到回退栈
-//                    backStack.push(inputField.getText());
-//                    forwardStack.clear(); // 新访问，清空前进历史
-//                }
-//
-//                System.out.println(backButton.isDisabled());
-//                System.out.println(forwardButton.isDisabled());
-
 
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 if (e.getMessage().contains("DataFrame is not accessible")) {
                     Platform.runLater(() -> {
                         Alert alert = new Alert(Alert.AlertType.WARNING);
-                        alert.setTitle("权限不足");
+                        alert.setTitle("Access Denied");
                         alert.setHeaderText(null);
-                        alert.setContentText("该用户没有访问权限，请切换用户登陆");
+                        alert.setContentText("This user does not have access permission. Please switch user and sign in.");
                         alert.showAndWait();
                     });
                 }
@@ -512,79 +494,63 @@ public class MainController {
     }
 
     public void skipQueryList(String skipURL) {
-        // 检查目标URL是否有效，以及是否与当前页面相同，避免不必要的重复加载
+        // validate target URL and avoid redundant reload
         if (skipURL == null || skipURL.trim().isEmpty() || skipURL.equals(this.currentUrl)) {
             return;
         }
 
-        // 同样地，将当前页面URL存入后退历史
-        // 确保 currentUrl 已经有值（不是第一次加载）
+        // push current URL into back history if exists
         if (!this.currentUrl.isEmpty()) {
             backStack.push(this.currentUrl);
         }
 
-        // 清空前进历史，因为这是一次新的导航路径
+        // clear forward history for a new navigation path
         forwardStack.clear();
 
-        // 最后，调用 queryAndShow 去加载新页面的内容
+        // load new page
         queryAndShow(skipURL);
     }
 
-
     @FXML
     void queryList(ActionEvent event) {
-//        try {
-//            String url = inputField.getText();
-//            System.out.println("输入的 URL: " + url);
-//
-//            queryAndShow(url);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
         String newUrl = inputField.getText();
-        System.out.println("输入的 URL: " + newUrl);
+        System.out.println("Input URL: " + newUrl);
 
-        // 如果新URL和当前URL相同，或者为空，则不执行任何操作
         if (newUrl == null || newUrl.trim().isEmpty() || newUrl.equals(this.currentUrl)) {
             return;
         }
 
-        // 核心逻辑：
-        // 1. 如果当前 URL 不为空，将其压入后退栈，因为它即将成为历史
         if (!this.currentUrl.isEmpty()) {
             backStack.push(this.currentUrl);
         }
-        // 2. 用户发起了新的导航，前进历史应该被清空
         forwardStack.clear();
 
-        // 3. 调用重构后的方法去加载内容
         queryAndShow(newUrl);
-
     }
 
     @FXML
     private void login(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml")); // 登录页面 FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml")); // login page FXML
             Parent root = loader.load();
             Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("用户登录");
+            stage.setTitle("User Login");
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // 点击注册按钮跳转注册页面
+    // click register button to open register page
     @FXML
     private void register(ActionEvent event) {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/register.fxml")); // 注册页面 FXML
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/register.fxml")); // register page FXML
             Parent root = loader.load();
             Stage stage = (Stage) registerButton.getScene().getWindow();
             stage.setScene(new Scene(root));
-            stage.setTitle("用户注册");
+            stage.setTitle("User Registration");
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefWidth="350.0" prefHeight="300.0" style="-fx-background-color: #F1F3F4;"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="link.rdcn.controller.LoginController">
+
+    <!-- 居中容器 -->
+    <VBox fx:id="loginVBox" layoutX="0" layoutY="0" spacing="15" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"
+          AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0" alignment="CENTER">
+
+        <!-- Logo -->
+        <ImageView fitWidth="100" fitHeight="80">
+            <image>
+                <Image url="@img.png"/>
+            </image>
+        </ImageView>
+
+        <!-- 用户名输入 -->
+        <TextField fx:id="usernameField" promptText="Username" prefWidth="280" prefHeight="35" maxWidth="280"
+                   style="-fx-font-size: 14px; -fx-background-radius: 6; -fx-padding: 0 10;"/>
+
+        <!-- 密码输入 -->
+        <PasswordField fx:id="passwordField" promptText="Password" prefWidth="280" prefHeight="35" maxWidth="280"
+                       style="-fx-font-size: 14px; -fx-background-radius: 6; -fx-padding: 0 10;"/>
+
+        <!-- 登录按钮 -->
+        <Button text="Login" onAction="#handleLogin" prefWidth="280" prefHeight="40"
+                style="-fx-background-color: #4285F4; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 6;"/>
+    </VBox>
+</AnchorPane>
