@@ -3,6 +3,7 @@ package link.rdcn.controller;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import link.rdcn.struct.Column;
@@ -44,14 +45,13 @@ public class ListController {
         showData();
     }
 
-
     private void showData() {
         if (df == null) return;
 
         // 清空之前的列
         tableView.getColumns().clear();
 
-        // 动态创建表头 (这部分是正确的，无需修改)
+        // 动态创建表头
         Seq<Column> fields = df.schema().columns().toSeq();
         List<Column> javaFields = JavaConverters.seqAsJavaList(fields);
 
@@ -64,72 +64,109 @@ public class ListController {
 
             TableColumn<Row, String> column = new TableColumn<>(colName + " : " + colType);
 
-
             column.setCellValueFactory(cellData -> {
                 Row row = cellData.getValue();
                 Object value = row.get(index);
                 return new javafx.beans.property.SimpleStringProperty(value != null ? value.toString() : "");
             });
 
+            // 👉 自定义单元格渲染：包含 "ref" 时蓝色带下划线
+            column.setCellFactory(col -> new TableCell<Row, String>() {
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+
+                    if (empty || item == null) {
+                        setText(null);
+                        setStyle("");
+                    } else {
+                        setText(item);
+
+                        if (item.contains("Ref")) {
+                            setStyle("-fx-text-fill: blue; -fx-underline: true;");
+                            setCursor(Cursor.HAND);
+                        } else {
+                            setStyle("");
+                        }
+                    }
+                }
+            });
+
             tableView.getColumns().add(column);
         }
 
         // --- 分页逻辑 ---
-
-        // 提前获取所有数据，以供分页使用
         List<Row> allRows = JavaConverters.seqAsJavaList(df.collect().toSeq());
-
-        // 假设每页显示 20 行数据
         final int rowsPerPage = 20;
 
-        // 设置分页控件的总页数
         int pageCount = (int) Math.ceil((double) allRows.size() / rowsPerPage);
         pagination.setPageCount(pageCount);
 
-        // 设置分页工厂方法，每次翻页时都会调用此方法
         pagination.setPageFactory(pageIndex -> {
-            // 计算当前页数据的起始和结束索引
             int fromIndex = pageIndex * rowsPerPage;
             int toIndex = Math.min(fromIndex + rowsPerPage, allRows.size());
-            // 从总数据列表中截取当前页的数据子集
             List<Row> sublist = allRows.subList(fromIndex, toIndex);
-            // 将数据子集包装成 ObservableList 并设置给 TableView
             ObservableList<Row> data = FXCollections.observableArrayList(sublist);
             tableView.setItems(data);
             return new BorderPane();
         });
 
-        // --- 双击行事件处理 (保持不变) ---
-        if(currentUrl.contains("listDataSetNames")){
+
+
+
+        if (currentUrl.contains("listDataSets")) {
             tableView.setRowFactory(tv -> {
                 TableRow<Row> row = new TableRow<>();
                 row.setOnMouseClicked(event -> {
-                    if (event.getClickCount() == 2 && !row.isEmpty()) {
-                        Row rowData = row.getItem();
-                        String datasetId = rowData.get(0).toString();
-                        String dfUrl = "dacp://0.0.0.0:3101/listDataFrameNames/" + datasetId;
-                        mainController.inputField.setText(dfUrl);
-                        mainController.skipQueryList(dfUrl);
+                    if (event.getClickCount() == 1 && !row.isEmpty()) {
+                        // 获取点击的单元格位置
+                        TablePosition<Row, ?> pos = tableView.getSelectionModel().getSelectedCells().get(0);
+                        int colIndex = pos.getColumn();
+
+                        // 获取单元格的值
+                        Object cellValue = row.getItem().get(colIndex);
+                        if (cellValue != null && cellValue.toString().contains("Ref")) {
+                            // 👉 只有在该列值包含 "ref" 时才跳转
+                            Row rowData = row.getItem();
+                            String datasetId = rowData.get(0).toString();
+                            String dfUrl = "dacp://0.0.0.0:3101/listDataFrames/" + datasetId;
+                            mainController.inputField.setText(dfUrl);
+                            mainController.skipQueryList(dfUrl);
+                        }
                     }
                 });
                 return row;
             });
         }
 
-        if(currentUrl.contains("listDataFrameNames")){
+
+        if (currentUrl.contains("listDataFrames")) {
             tableView.setRowFactory(tv -> {
                 TableRow<Row> row = new TableRow<>();
                 row.setOnMouseClicked(event -> {
-                    if (event.getClickCount() == 2 && !row.isEmpty()) {
-                        Row rowData = row.getItem();
-                        String dataframeId = rowData.get(0).toString();
-                        String dfUrl = "dacp://0.0.0.0:3101/get/" + dataframeId;
-                        mainController.inputField.setText(dfUrl);
-                        mainController.skipQueryList(dfUrl);
+                    if (event.getClickCount() == 1 && !row.isEmpty()) {
+                        // 获取点击的单元格位置
+                        if (!tableView.getSelectionModel().getSelectedCells().isEmpty()) {
+                            TablePosition<Row, ?> pos = tableView.getSelectionModel().getSelectedCells().get(0);
+                            int colIndex = pos.getColumn();
+
+                            // 获取单元格值
+                            Object cellValue = row.getItem().get(colIndex);
+
+                            if (cellValue != null && cellValue.toString().contains("Ref")) {
+                                // 👉 只有包含 "ref" 的单元格才能跳转
+                                Row rowData = row.getItem();
+                                String dataframeId = rowData.get(0).toString();
+                                String dfUrl = "dacp://0.0.0.0:3101/" + dataframeId;
+                                mainController.inputField.setText(dfUrl);
+                                mainController.skipQueryList(dfUrl);
+                            }
+                        }
                     }
                 });
                 return row;
             });
         }
+
     }
 }

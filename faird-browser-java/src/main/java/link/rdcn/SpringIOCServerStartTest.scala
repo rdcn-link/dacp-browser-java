@@ -41,15 +41,16 @@ class SpringIOCServerStartTest {
     dacpServer.start(new FairdConfig)
 
     val dacpClient = FairdClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
-
-    System.out.println("connet success!")
-    val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSetNames")
+    val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSets")
     println("#########DataSet List")
     dfDataSets.foreach(println)
-    val dfNames = dacpClient.get("dacp://0.0.0.0:3101/listDataFrameNames/csv")
+    val dfNames = dacpClient.get("dacp://0.0.0.0:3101/listDataFrames/dataSet1")
     println("#########DataFrame List")
     dfNames.foreach(println)
-    val df = dacpClient.get("dacp://0.0.0.0:3101/get/csv")
+    val hostInfos = dacpClient.get("dacp://0.0.0.0:3101/listHostInfo")
+    println("#########Host List")
+    hostInfos.foreach(println)
+    val df = dacpClient.get("dacp://0.0.0.0:3101/dataFrame1")
     println("###########println DataFrame")
     val s: StructType = df.schema
     df.foreach(println)
@@ -69,6 +70,7 @@ class DataReceiverTest extends DataReceiver {
   override def finish(): Unit = ???
 }
 
+
 class DataProviderTest extends DataProvider {
 
   /**
@@ -77,8 +79,10 @@ class DataProviderTest extends DataProvider {
    * @return java.util.List[String]
    */
   override def listDataSetNames(): java.util.List[String] = {
-    Arrays.asList("dataSet1")
+    Arrays.asList((1 to 10).map(i => s"dataSet$i"): _*)
   }
+
+
 
   /**
    * 获取数据集的 RDF 元数据，填充到传入的 rdfModel 中
@@ -86,7 +90,7 @@ class DataProviderTest extends DataProvider {
    * @param dataSetId 数据集 ID
    * @param rdfModel  RDF 模型（由调用者传入，方法将其填充）
    */
-override def getDataSetMetaData(dataSetId: String, rdfModel: Model): Unit = ???
+  override def getDataSetMetaData(dataSetId: String, rdfModel: Model): Unit = {}
 
   /**
    * 列出指定数据集下的所有数据帧名称
@@ -94,7 +98,9 @@ override def getDataSetMetaData(dataSetId: String, rdfModel: Model): Unit = ???
    * @param dataSetId 数据集 ID
    * @return java.util.List[String]
    */
-override def listDataFrameNames(dataSetId: String): java.util.List[String] = Arrays.asList("dataFrame1")
+  override def listDataFrameNames(dataSetId: String): java.util.List[String] = {
+    Arrays.asList((1 to 8).map(i => s"dataFrame$i"): _*)
+  }
 
   /**
    * 获取数据帧的数据流
@@ -108,7 +114,7 @@ override def listDataFrameNames(dataSetId: String): java.util.List[String] = Arr
 //    override def schema: StructType = StructType.empty.add("col1", StringType)
 //
 //    override def iterator: ClosableIterator[Row] = {
-//      val rows =Seq.range(0, 1000).map(index => Row.fromSeq(Seq("id"+index))).toIterator
+//      val rows =Seq.range(0, 100).map(index => Row.fromSeq(Seq("id"+index))).toIterator
 //      ClosableIterator(rows)()
 //    }
 //  }
@@ -149,14 +155,23 @@ override def listDataFrameNames(dataSetId: String): java.util.List[String] = Arr
   }
 
 
-
   /**
    * 获取数据帧详细信息
    *
    * @param dataFrameName 数据帧名
    * @return 数据帧的DataFrameDocument
    */
-  override def getDocument(dataFrameName: String): DataFrameDocument = ???
+  override def getDocument(dataFrameName: String): DataFrameDocument = {
+    new DataFrameDocument {
+      override def getSchemaURL(): Option[String] = Some("")
+
+      override def getColumnURL(colName: String): Option[String] = Some("")
+
+      override def getColumnAlias(colName: String): Option[String] = Some("")
+
+      override def getColumnTitle(colName: String): Option[String] = Some("")
+    }
+  }
 
   /** *
    * 获取数据帧统计信息
@@ -164,7 +179,13 @@ override def listDataFrameNames(dataSetId: String): java.util.List[String] = Arr
    * @param dataFrameName 数据帧名
    * @return 数据帧的DataFrameStatistics
    */
-  override def getStatistics(dataFrameName: String): DataFrameStatistics = ???
+  override def getStatistics(dataFrameName: String): DataFrameStatistics = {
+    new DataFrameStatistics {
+      override def rowCount: Long = -1
+
+      override def byteSize: Long = -1
+    }
+  }
 }
 
 class AuthorProviderTest extends AuthProvider {

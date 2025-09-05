@@ -500,15 +500,12 @@ public class MainController {
         if (skipURL == null || skipURL.trim().isEmpty() || skipURL.equals(this.currentUrl)) {
             return;
         }
-
         // push current URL into back history if exists
         if (!this.currentUrl.isEmpty()) {
             backStack.push(this.currentUrl);
         }
-
         // clear forward history for a new navigation path
         forwardStack.clear();
-
         // load new page
         queryAndShow(skipURL);
     }
