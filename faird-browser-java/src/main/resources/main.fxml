@@ -144,7 +144,7 @@
 
 
                 <!-- 用户图标 -->
-                <ImageView fx:id="userIcon" fitWidth="40" fitHeight="40" pickOnBounds="true" >
+                <ImageView fx:id="userIcon" fitWidth="30" fitHeight="30" pickOnBounds="true" >
                     <image>
                         <Image url="@用户icon.png"/>
                     </image>

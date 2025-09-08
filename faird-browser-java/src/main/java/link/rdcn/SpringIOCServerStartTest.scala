@@ -4,7 +4,7 @@ import link.rdcn.client.dacp.FairdClient
 import link.rdcn.provider.{DataFrameDocument, DataFrameStatistics, DataProvider}
 import link.rdcn.received.DataReceiver
 import link.rdcn.server.dacp.DacpServer
-import link.rdcn.struct.ValueType.StringType
+import link.rdcn.struct.ValueType.{DoubleType, IntType, StringType}
 import link.rdcn.struct.{DataFrame, DataStreamSource, Row, StructType}
 import link.rdcn.user._
 import link.rdcn.util.ClosableIterator
@@ -118,41 +118,109 @@ class DataProviderTest extends DataProvider {
 //      ClosableIterator(rows)()
 //    }
 //  }
-  override def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
-    override def rowCount: Long = -1
 
-    // 定义 10 列
+
+//  override def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
+//    override def rowCount: Long = -1
+//
+//    // 定义 10 列
+//    override def schema: StructType = StructType.empty
+//      .add("col1", IntType)
+//      .add("col2", DoubleType)
+//      .add("col3", StringType)
+//      .add("col4", StringType)
+//      .add("col5", StringType)
+//      .add("col6", StringType)
+//      .add("col7", StringType)
+//      .add("col8", StringType)
+//      .add("col9", StringType)
+//      .add("col10", StringType)
+//
+//    override def iterator: ClosableIterator[Row] = {
+//      val rows = Seq.range(0, 1000).map { index =>
+//        // 每行生成 10 列示例数据
+//        Row.fromSeq(Seq(
+//          index,
+//          index*1.0,
+//          s"type$index",
+//          s"value$index",
+//          s"status$index",
+//          s"col6_$index",
+//          s"col7_$index",
+//          s"col8_$index",
+//          s"col9_$index",
+//          s"col10_$index"
+//        ))
+//      }.toIterator
+//      ClosableIterator(rows)()
+//    }
+//  }
+
+  import java.sql.Timestamp
+  import java.text.SimpleDateFormat
+
+  override def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
+    override def rowCount: Long = -1  // 如果不知道总行数，保持 -1
+
+    // 定义 schema，字段名和类型对应 CSV
     override def schema: StructType = StructType.empty
-      .add("col1", StringType)
-      .add("col2", StringType)
-      .add("col3", StringType)
-      .add("col4", StringType)
-      .add("col5", StringType)
-      .add("col6", StringType)
-      .add("col7", StringType)
-      .add("col8", StringType)
-      .add("col9", StringType)
-      .add("col10", StringType)
+      .add("VendorID", IntType)
+      .add("tpep_pickup_datetime", StringType)       // 如果需要可转成 TimestampType
+      .add("tpep_dropoff_datetime", StringType)      // 同上
+      .add("passenger_count", IntType)
+      .add("trip_distance", DoubleType)
+      .add("pickup_longitude", DoubleType)
+      .add("pickup_latitude", DoubleType)
+      .add("RateCodeID", IntType)
+      .add("store_and_fwd_flag", StringType)
+      .add("dropoff_longitude", DoubleType)
+      .add("dropoff_latitude", DoubleType)
+      .add("payment_type", IntType)
+      .add("fare_amount", DoubleType)
+      .add("extra", DoubleType)
+      .add("mta_tax", DoubleType)
+      .add("tip_amount", DoubleType)
+      .add("tolls_amount", DoubleType)
+      .add("improvement_surcharge", DoubleType)
+      .add("total_amount", DoubleType)
 
     override def iterator: ClosableIterator[Row] = {
-      val rows = Seq.range(0, 1000).map { index =>
-        // 每行生成 10 列示例数据
+      val source = scala.io.Source.fromFile("/Volumes/My Passport/archive/yellow_tripdata_2015-01.csv")  // CSV 文件路径
+      val lines = source.getLines()
+
+      // 跳过表头
+      val dataLines = lines.drop(1)
+
+      val rows = dataLines.map { line =>
+        val parts = line.split(",")  // 你给的示例是 tab 分隔符，如果是逗号，改成 ","
+
         Row.fromSeq(Seq(
-          s"id$index",
-          s"name$index",
-          s"type$index",
-          s"value$index",
-          s"status$index",
-          s"col6_$index",
-          s"col7_$index",
-          s"col8_$index",
-          s"col9_$index",
-          s"col10_$index"
+          parts(0).toInt,
+          parts(1),  // pickup 时间
+          parts(2),  // dropoff 时间
+          parts(3).toInt,
+          parts(4).toDouble,
+          parts(5).toDouble,
+          parts(6).toDouble,
+          parts(7).toInt,
+          parts(8),
+          parts(9).toDouble,
+          parts(10).toDouble,
+          parts(11).toInt,
+          parts(12).toDouble,
+          parts(13).toDouble,
+          parts(14).toDouble,
+          parts(15).toDouble,
+          parts(16).toDouble,
+          parts(17).toDouble,
+          parts(18).toDouble
         ))
       }.toIterator
-      ClosableIterator(rows)()
+
+      ClosableIterator(rows) { source.close() }
     }
   }
+
 
 
   /**
