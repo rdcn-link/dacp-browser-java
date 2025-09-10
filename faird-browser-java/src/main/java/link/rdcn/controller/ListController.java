@@ -101,30 +101,6 @@ public class ListController {
 //                        setCursor(Cursor.DEFAULT);
                     } else {
                         setText(item);
-
-                        boolean selected = getTableRow() != null && getTableRow().isSelected();
-
-//                        if (selected) {
-////                            getStyleClass().add("link-selected");
-//                            setStyle("-fx-background-color: #3399FF; -fx-text-fill: white;");
-//                            setCursor(Cursor.DEFAULT);
-//                        } else if (item.contains("dacp://0.0.0.0:3101")) {
-//                            setStyle("-fx-text-fill: blue; -fx-underline: true;");
-//                            setCursor(Cursor.HAND);
-//                        } else {
-//                            switch (colType) { // Assumes colType is accessible here
-//                                case "Int":
-//                                    getStyleClass().add(INT_CELL_STYLE);
-//                                    break;
-//                                case "Double":
-//                                    getStyleClass().add(DOUBLE_CELL_STYLE);
-//                                    break;
-//                                default:
-//                                    // No special style class for default cells
-//                                    break;
-//                            }
-//                            setCursor(Cursor.DEFAULT);
-//                        }
                         if (item.contains("dacp://0.0.0.0:3101")) {
                             getStyleClass().add(LINK_CELL_STYLE);
                             setCursor(Cursor.HAND);
@@ -158,23 +134,6 @@ public class ListController {
         // 第一次加载
         loadMoreRows(offset, rowsPerPage, loadedRows);
 
-        // 监听滚动条
-//        tableView.skinProperty().addListener((obs, oldSkin, newSkin) -> {
-//            if (newSkin != null) {
-//                ScrollBar vBar = (ScrollBar) tableView.lookup(".scroll-bar:vertical");
-//                if (vBar != null) {
-//                    vBar.valueProperty().addListener((o, oldVal, newVal) -> {
-//                        if (newVal.doubleValue() == vBar.getMax()) {
-//                            // 滚动到底部，加载更多
-//                            loadMoreRows(offset, rowsPerPage, loadedRows);
-//                        }
-//                    });
-//                }
-//            }
-//        });
-        // 控制是否正在加载的标志
-
-// 初始化时
         tableView.skinProperty().addListener((obs, oldSkin, newSkin) -> {
             if (newSkin != null) {
                 ScrollBar vBar = (ScrollBar) tableView.lookup(".scroll-bar:vertical");
@@ -193,7 +152,6 @@ public class ListController {
                 }
             }
         });
-
 
         // === 点击跳转逻辑 ===
         if (currentUrl.contains("listDataSets")) {

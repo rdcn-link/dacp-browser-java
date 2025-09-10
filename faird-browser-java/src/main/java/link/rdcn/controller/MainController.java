@@ -113,28 +113,6 @@ public class MainController {
     private final Stack<String> backStack = new Stack<>();   // back history
     private final Stack<String> forwardStack = new Stack<>(); // forward history
 
-//    private void queryAndShowWithoutStack(String url) {
-//        try {
-//            inputField.setText(url);
-//
-//            DataFrame df = fairdClient.get(url);
-//            currentDf = df;
-//
-//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
-//            BorderPane listRoot = loader.load();
-//
-//            ListController controller = loader.getController();
-//            controller.setCurrentUrl(url);
-//            controller.setDataFrame(df);
-//            controller.setMainController(this);
-//
-//            contentPane.getChildren().clear();
-//            contentPane.getChildren().add(listRoot);
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     @FXML
     private void refreshPage(){
@@ -206,9 +184,6 @@ public class MainController {
         // menu items for not-logged-in state
         MenuItem loginItem = new MenuItem("Login");
         loginItem.setOnAction(e -> login());
-//        MenuItem registerItem = new MenuItem("Register");
-//        registerItem.setOnAction(e -> register());
-
         MenuItem favoriteItem = new MenuItem("Favorites");
         favoriteItem.setOnAction(event -> openFavorites());
 
@@ -443,17 +418,7 @@ public class MainController {
             }
             // 2. get DataFrame
             try {
-//                startTime = System.currentTimeMillis();
                 DataFrame df = fairdClient.get(url);
-//                long elapsed = System.currentTimeMillis() - startTime;
-
-//                long hours = elapsed / (1000 * 60 * 60);
-//                long minutes = (elapsed / (1000 * 60)) % 60;
-//                long seconds = (elapsed / 1000) % 60;
-//                long millis = elapsed % 1000;
-
-//                String time = String.format("Run Time: %02d:%02d:%02d.%03d", hours, minutes, seconds, millis);
-//                runtimeLabel.setText(time);
 
                 currentDf = df;
                 // 3. load list.fxml

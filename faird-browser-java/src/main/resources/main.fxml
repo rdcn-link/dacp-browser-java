@@ -58,13 +58,6 @@
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
 
-                <!-- Logo -->
-<!--                <ImageView fx:id="back2main" fitHeight="40" fitWidth="40">-->
-<!--                    <image>-->
-<!--                        <Image url="@浏览器.png"/>-->
-<!--                    </image>-->
-<!--                </ImageView>-->
-
                 <Button fx:id="backButton" text="◀"
                         style="-fx-background-color: transparent; -fx-font-size: 20px; -fx-cursor: hand;" onAction="#goBack">
                     <padding>
@@ -93,13 +86,6 @@
                         <Insets top="0" right="5" bottom="0" left="0"/>
                     </padding>
                 </Button>
-
-                <!--                <padding>-->
-<!--                    <Insets top="10" right="10" bottom="10" left="10"/>-->
-<!--                </padding>-->
-
-
-
                 <!-- 搜索框 -->
                 <StackPane HBox.hgrow="ALWAYS" alignment="CENTER_LEFT">
                     <TextField fx:id="inputField" promptText="Enter URL"
@@ -120,16 +106,6 @@
                             onAction="#handleStar"/>
                 </StackPane>
 
-                <!-- 下载按钮 -->
-<!--                <MFXButton text="down"-->
-<!--                           fx:id="queryButton"-->
-<!--                           onAction="#downloadFile"-->
-<!--                           prefHeight="40"-->
-<!--                           prefWidth="80"-->
-<!--                           style="-fx-background-radius: 20;-->
-<!--                                  -fx-background-color: #E0E0E0;-->
-<!--                                  -fx-text-fill: #202124;-->
-<!--                                  -fx-font-size: 15px;"/>-->
                 <Button fx:id="downloadButton"
                         onAction="#downloadFile"
                         prefHeight="40"
@@ -172,5 +148,4 @@
                    style="-fx-text-fill: #666666; -fx-font-size: 12px; -fx-padding: 5 10 5 0;"/>
         </HBox>
     </bottom>
-
 </BorderPane>
