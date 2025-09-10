@@ -21,3 +21,42 @@
 .menu-button .menu-item:hover {
     -fx-background-color: #000000;
 }
+
+/*!* 选中整行时的背景色 *!*/
+/*.table-row-cell:selected {*/
+/*    -fx-background-color: #3399FF;*/
+/*}*/
+
+/*!* 选中行里的文字统一白色 *!*/
+/*.table-row-cell:selected .table-cell {*/
+/*    -fx-text-fill: white;*/
+/*}*/
+
+
+
+
+
+/* Default styles for different cell types */
+.int-cell {
+    -fx-background-color: #E6FFE6; /* Light green */
+    -fx-text-fill: black;
+}
+
+.double-cell {
+    -fx-background-color: #FFF5E6; /* Light orange */
+    -fx-text-fill: black;
+}
+
+.link-cell {
+    -fx-background-color: white;
+    -fx-text-fill: blue;
+    -fx-underline: true;
+}
+
+/* --- The Magic Fix --- */
+/* This rule targets ANY cell inside a SELECTED row and makes it blue with white text. */
+/* It has high specificity, so it will always override the default styles above. */
+.table-row-cell:selected .table-cell {
+    -fx-background-color: #3399FF; /* Your desired selection blue */
+    -fx-text-fill: white;
+}

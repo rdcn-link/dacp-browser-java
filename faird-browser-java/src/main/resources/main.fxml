@@ -167,8 +167,8 @@
     <!-- 底部状态栏 -->
     <bottom>
         <HBox alignment="CENTER_RIGHT" style="-fx-background-color: transparent;">
-            <Label fx:id="runtimeLabel"
-                   text="Run Time: 00:00:00.000"
+            <Label fx:id="timeAndByteLabel"
+                   text="Status:   Run time: 0ms  Load Bytes: 0KB"
                    style="-fx-text-fill: #666666; -fx-font-size: 12px; -fx-padding: 5 10 5 0;"/>
         </HBox>
     </bottom>

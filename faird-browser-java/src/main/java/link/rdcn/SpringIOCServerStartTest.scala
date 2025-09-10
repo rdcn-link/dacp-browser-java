@@ -39,7 +39,6 @@ class SpringIOCServerStartTest {
   def serverDstpTest(): Unit = {
     val dacpServer = new DacpServer(new DataProviderTest, new DataReceiverTest, new AuthorProviderTest)
     dacpServer.start(new FairdConfig)
-
     val dacpClient = FairdClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
     val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSets")
     println("#########DataSet List")

@@ -15,8 +15,12 @@ public class TestJavaFXMain extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getClassLoader().getResource("main.fxml")));
+
         primaryStage.setTitle("test");
-        primaryStage.setScene(new Scene(root));
+        Scene scene = new Scene(root);
+
+        scene.getStylesheets().add(getClass().getResource("/style_fx.css").toExternalForm());
+        primaryStage.setScene(scene);
         primaryStage.initStyle(StageStyle.UNDECORATED);
 //        primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.show();

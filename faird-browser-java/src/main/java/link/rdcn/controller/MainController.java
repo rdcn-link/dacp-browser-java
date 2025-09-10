@@ -84,9 +84,13 @@ public class MainController {
     private Button starButton;
 
     @FXML
-    private Label runtimeLabel;
+    private Label timeAndByteLabel;
 
-    private long startTime;
+    public void setTimeAndByteLabel(String timeAndByte) {
+        timeAndByteLabel.setText(timeAndByte);
+    }
+
+//    private long startTime;
 
     // state
     private boolean isCollected = false;
@@ -109,28 +113,28 @@ public class MainController {
     private final Stack<String> backStack = new Stack<>();   // back history
     private final Stack<String> forwardStack = new Stack<>(); // forward history
 
-    private void queryAndShowWithoutStack(String url) {
-        try {
-            inputField.setText(url);
-
-            DataFrame df = fairdClient.get(url);
-            currentDf = df;
-
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
-            BorderPane listRoot = loader.load();
-
-            ListController controller = loader.getController();
-            controller.setCurrentUrl(url);
-            controller.setDataFrame(df);
-            controller.setMainController(this);
-
-            contentPane.getChildren().clear();
-            contentPane.getChildren().add(listRoot);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    private void queryAndShowWithoutStack(String url) {
+//        try {
+//            inputField.setText(url);
+//
+//            DataFrame df = fairdClient.get(url);
+//            currentDf = df;
+//
+//            FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
+//            BorderPane listRoot = loader.load();
+//
+//            ListController controller = loader.getController();
+//            controller.setCurrentUrl(url);
+//            controller.setDataFrame(df);
+//            controller.setMainController(this);
+//
+//            contentPane.getChildren().clear();
+//            contentPane.getChildren().add(listRoot);
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+//    }
 
     @FXML
     private void refreshPage(){
@@ -202,8 +206,8 @@ public class MainController {
         // menu items for not-logged-in state
         MenuItem loginItem = new MenuItem("Login");
         loginItem.setOnAction(e -> login());
-        MenuItem registerItem = new MenuItem("Register");
-        registerItem.setOnAction(e -> register());
+//        MenuItem registerItem = new MenuItem("Register");
+//        registerItem.setOnAction(e -> register());
 
         MenuItem favoriteItem = new MenuItem("Favorites");
         favoriteItem.setOnAction(event -> openFavorites());
@@ -220,7 +224,9 @@ public class MainController {
                 usernameItem.setDisable(true);
                 userMenu.getItems().addAll(usernameItem, favoriteItem, logoutItem);
             } else {
-                userMenu.getItems().addAll(loginItem, registerItem);
+//                userMenu.getItems().addAll(loginItem, registerItem);
+                userMenu.getItems().add(loginItem);
+
             }
             userMenu.show(userIcon, Side.BOTTOM, 0, 5);
         });
@@ -264,15 +270,12 @@ public class MainController {
 
     // login example
     private void login() {
-
         System.out.println("Executing login logic...");
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
             AnchorPane loginRoot = loader.load();
-
             LoginController loginController = loader.getController();
             loginController.setMainController(this);
-
             // create new Stage
             Stage loginStage = new Stage();
             // set owner
@@ -285,11 +288,6 @@ public class MainController {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    // register example
-    private void register() {
-        System.out.println("Executing registration logic...");
     }
 
     // logout
@@ -445,17 +443,17 @@ public class MainController {
             }
             // 2. get DataFrame
             try {
-                startTime = System.currentTimeMillis();
+//                startTime = System.currentTimeMillis();
                 DataFrame df = fairdClient.get(url);
-                long elapsed = System.currentTimeMillis() - startTime;
+//                long elapsed = System.currentTimeMillis() - startTime;
 
-                long hours = elapsed / (1000 * 60 * 60);
-                long minutes = (elapsed / (1000 * 60)) % 60;
-                long seconds = (elapsed / 1000) % 60;
-                long millis = elapsed % 1000;
+//                long hours = elapsed / (1000 * 60 * 60);
+//                long minutes = (elapsed / (1000 * 60)) % 60;
+//                long seconds = (elapsed / 1000) % 60;
+//                long millis = elapsed % 1000;
 
-                String time = String.format("Run Time: %02d:%02d:%02d.%03d", hours, minutes, seconds, millis);
-                runtimeLabel.setText(time);
+//                String time = String.format("Run Time: %02d:%02d:%02d.%03d", hours, minutes, seconds, millis);
+//                runtimeLabel.setText(time);
 
                 currentDf = df;
                 // 3. load list.fxml
@@ -463,10 +461,11 @@ public class MainController {
                 BorderPane listRoot = loader.load();
                 // 4. pass DataFrame to ListController
                 ListController controller = loader.getController();
+                controller.setMainController(this);
+
 //                controller.setUrl(url);
                 controller.setCurrentUrl(url);
                 controller.setDataFrame(df);
-                controller.setMainController(this);
                 // replace center content
                 contentPane.getChildren().clear();
                 contentPane.getChildren().add(listRoot);
@@ -535,21 +534,6 @@ public class MainController {
             Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.setScene(new Scene(root));
             stage.setTitle("User Login");
-            stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // click register button to open register page
-    @FXML
-    private void register(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/register.fxml")); // register page FXML
-            Parent root = loader.load();
-            Stage stage = (Stage) registerButton.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("User Registration");
             stage.show();
         } catch (Exception e) {
             e.printStackTrace();
