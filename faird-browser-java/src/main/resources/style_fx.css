@@ -48,7 +48,6 @@
 }
 
 .link-cell {
-    -fx-background-color: white;
     -fx-text-fill: blue;
     -fx-underline: true;
 }
@@ -60,3 +59,63 @@
     -fx-background-color: #3399FF; /* Your desired selection blue */
     -fx-text-fill: white;
 }
+
+
+
+
+
+
+
+
+
+/* 下拉菜单整体 */
+.context-menu {
+    -fx-background-color: #ffffff;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0.5, 0, 2);
+    -fx-padding: 5;
+}
+
+/* 分组标题样式（历史记录 / 收藏夹） */
+.context-menu .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: #555555;
+    -fx-padding: 5 10 5 10;
+}
+
+/* 每一项的 HBox */
+.custom-menu-item {
+    -fx-padding: 5 10 5 10;
+    -fx-background-radius: 8;
+}
+
+/* 鼠标悬停效果 */
+.custom-menu-item:hover {
+    -fx-background-color: #f0f0f0;
+}
+
+/* URL 文本样式 */
+.custom-menu-item .label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333;
+}
+
+/* 锁图标样式 */
+.custom-menu-item .label.lock {
+    -fx-text-fill: #e74c3c;
+}
+
+/* 查看收藏夹链接样式 */
+.custom-menu-item .label.view-favorites {
+    -fx-text-fill: #3498db;
+    -fx-underline: true;
+    -fx-cursor: hand;
+}
+
+/* 阴影和分隔线 */
+.context-menu .separator {
+    -fx-background-color: #e0e0e0;
+    -fx-padding: 2 0 2 0;
+}
+

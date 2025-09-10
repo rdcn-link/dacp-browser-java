@@ -6,6 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
 import javafx.geometry.Side;
+import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -21,9 +22,6 @@ import javafx.stage.Stage;
 import link.rdcn.FairdConfig;
 
 import link.rdcn.client.dacp.FairdClient;
-//import link.rdcn.server.AuthorProviderTest;
-//import link.rdcn.server.DataProviderTest;
-//import link.rdcn.server.DataReceiverTest;
 import link.rdcn.AuthorProviderTest;
 import link.rdcn.DataProviderTest;
 import link.rdcn.DataReceiverTest;
@@ -38,10 +36,18 @@ import scala.collection.JavaConverters;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 public class MainController {
+
+    private boolean ignoreTextChange = false;
+
+    // 在 MainController 中新增
+    private final List<String> historyUrls = new ArrayList<>();
+    private ContextMenu suggestionMenu = new ContextMenu();
 
     @FXML
     private Button backButton;
@@ -60,11 +66,6 @@ public class MainController {
     protected TextField inputField;
 
     @FXML
-    private Button loginButton; // top-right login button
-    @FXML
-    private Button registerButton; // top-right register button
-
-    @FXML
     private TabPane tabPane;
 
     @FXML
@@ -72,13 +73,6 @@ public class MainController {
 
     @FXML
     private BorderPane rootPane;
-
-    // top-right user icon
-    @FXML
-    private ImageView userIcon;
-    // top-left back-to-home icon
-//    @FXML
-//    private ImageView back2main;
 
     @FXML
     private Button starButton;
@@ -90,12 +84,10 @@ public class MainController {
         timeAndByteLabel.setText(timeAndByte);
     }
 
-//    private long startTime;
-
     // state
     private boolean isCollected = false;
-    private boolean loggedIn = false; // login state example
-    private String username = "Alice"; // logged-in username example
+    private boolean loggedIn = false; // login state
+    private String username = "";     // logged-in username
     private double xOffset = 0;
     private double yOffset = 0;
     private double prevX, prevY, prevWidth, prevHeight;
@@ -104,11 +96,6 @@ public class MainController {
     // DACP server
     private static DacpServer dacpServer;
     private FairdClient fairdClient;
-
-    // user dropdown menu
-    ContextMenu userMenu = new ContextMenu();
-    MenuItem usernameItem = new MenuItem();
-    MenuItem logoutItem = new MenuItem("Log out");
 
     private final Stack<String> backStack = new Stack<>();   // back history
     private final Stack<String> forwardStack = new Stack<>(); // forward history
@@ -129,7 +116,9 @@ public class MainController {
         if (!backStack.isEmpty()) {
             forwardStack.push(this.currentUrl);
             String previousUrl = backStack.pop();
+            ignoreTextChange = true;    // 防止触发提示
             queryAndShow(previousUrl);
+            ignoreTextChange = false;
         }
     }
 
@@ -138,7 +127,9 @@ public class MainController {
         if (!forwardStack.isEmpty()) {
             backStack.push(this.currentUrl);
             String nextUrl = forwardStack.pop();
+            ignoreTextChange = true;    // 防止触发提示
             queryAndShow(nextUrl);
+            ignoreTextChange = false;
         }
     }
 
@@ -153,9 +144,13 @@ public class MainController {
         if (contentPane != null && contentPane.getScene() != null) {
             return (Stage) contentPane.getScene().getWindow();
         } else {
-            // fallback: stage not initialized
             throw new IllegalStateException("Stage not initialized");
         }
+    }
+
+
+    private boolean hasAccess(String url) {
+        return !(url.matches("^dacp://(\\d{1,3}\\.){3}\\d{1,3}:\\d+/.+$") && !url.contains("listDataSets") && !url.contains("listDataFrames") && !url.contains("listHostInfo"));
     }
 
     @FXML
@@ -171,48 +166,118 @@ public class MainController {
 
         inputField.textProperty().addListener((obs, oldVal, newVal) -> {
             if (FavoriteManager.containFavorites(newVal)) {
-                // favorited -> highlight
                 isCollected = true;
                 starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFD700; -fx-font-size: 18px;");
             } else {
-                // not favorited -> gray
                 isCollected = false;
                 starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #999999; -fx-font-size: 18px;");
             }
         });
 
-        // menu items for not-logged-in state
-        MenuItem loginItem = new MenuItem("Login");
-        loginItem.setOnAction(e -> login());
-        MenuItem favoriteItem = new MenuItem("Favorites");
-        favoriteItem.setOnAction(event -> openFavorites());
-
-        // logged-in state
-        logoutItem.setOnAction(e -> logout());
-
-        // click avatar to show menu
-        userIcon.setOnMouseClicked(event -> {
-            userMenu.getItems().clear();
-
-            if (loggedIn) {
-                usernameItem.setText(username);
-                usernameItem.setDisable(true);
-                userMenu.getItems().addAll(usernameItem, favoriteItem, logoutItem);
-            } else {
-//                userMenu.getItems().addAll(loginItem, registerItem);
-                userMenu.getItems().add(loginItem);
-
+        inputField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (ignoreTextChange) {
+                return; // 页面前进/后退或程序设置，不显示提示
             }
-            userMenu.show(userIcon, Side.BOTTOM, 0, 5);
+
+            if (newVal == null || newVal.trim().isEmpty()) {
+                suggestionMenu.hide();
+                return;
+            }
+
+            List<String> favorites = FavoriteManager.getFavorites();
+            List<String> historyMatches = historyUrls.stream()
+                    .filter(url -> url.startsWith(newVal))
+                    .collect(Collectors.toList());
+
+            List<String> favoriteMatches = favorites.stream()
+                    .filter(url -> url.contains(newVal))
+                    .limit(5)
+                    .collect(Collectors.toList());
+
+            if (historyMatches.isEmpty() && favoriteMatches.isEmpty()) {
+                suggestionMenu.hide();
+                return;
+            }
+
+            suggestionMenu.getItems().clear();
+
+            // 历史记录部分
+            if (!historyMatches.isEmpty()) {
+                CustomMenuItem header = new CustomMenuItem(new Label("历史记录"));
+                header.setHideOnClick(false);
+                header.setDisable(true);
+                suggestionMenu.getItems().add(header);
+                for (String url : historyMatches) {
+                    HBox itemBox = new HBox();
+                    itemBox.setSpacing(5);
+                    Label urlLabel = new Label(url);
+                    itemBox.getChildren().add(urlLabel);
+
+                    if (!hasAccess(url)) {
+                        Label lockLabel = new Label("\uD83D\uDD12"); // 🔒
+                        itemBox.getChildren().add(lockLabel);
+                    }
+
+                    CustomMenuItem item = new CustomMenuItem(itemBox);
+                    item.setOnAction(e -> {
+                        inputField.setText(url);
+                        suggestionMenu.hide(); // 点击时隐藏
+                    });
+                    item.setHideOnClick(false); // 可以保留 false 或 true
+
+                    itemBox.setCursor(Cursor.HAND);
+                    suggestionMenu.getItems().add(item);
+                }
+            }
+
+            // 收藏夹部分
+            if (!favoriteMatches.isEmpty()) {
+                CustomMenuItem header = new CustomMenuItem(new Label("收藏夹"));
+                header.setHideOnClick(false);
+                header.setDisable(true);
+                suggestionMenu.getItems().add(header);
+                for (String url : favoriteMatches) {
+                    HBox itemBox = new HBox();
+                    itemBox.setSpacing(5);
+                    Label urlLabel = new Label(url);
+                    itemBox.getChildren().add(urlLabel);
+
+                    if (!hasAccess(url)) {
+                        Label lockLabel = new Label("\uD83D\uDD12"); // 🔒
+                        itemBox.getChildren().add(lockLabel);
+                    }
+
+                    CustomMenuItem item = new CustomMenuItem(itemBox);
+                    item.setOnAction(e -> {
+                        inputField.setText(url);
+//                        favoriteMatches.hide(); // 点击时隐藏
+                    });
+                    item.setHideOnClick(false);
+                    itemBox.setCursor(Cursor.HAND);
+
+                    suggestionMenu.getItems().add(item);
+                }
+
+
+                // 添加 “查看收藏夹” 链接
+                Label viewFavoritesLabel = new Label("查看收藏夹");
+                viewFavoritesLabel.setStyle("-fx-text-fill: blue; -fx-underline: true;"); // 蓝色下划线，像链接
+                viewFavoritesLabel.setOnMouseClicked(event -> {
+                    openFavorites(); // 调用你的收藏详情方法
+                    suggestionMenu.hide();
+                });
+                CustomMenuItem viewFavoritesItem = new CustomMenuItem(viewFavoritesLabel);
+                viewFavoritesItem.setHideOnClick(false); // 点击不会自动隐藏
+                suggestionMenu.getItems().add(viewFavoritesItem);
+            }
+
+
+            if (!suggestionMenu.isShowing()) {
+                suggestionMenu.show(inputField, Side.BOTTOM, 0, 0);
+            }
         });
 
-//        back2main.setOnMouseClicked(event -> {
-//            contentPane.getChildren().clear();
-//        });
-
         Platform.runLater(() -> {
-            // get Stage
-//            Stage stage = (Stage) tabPane.getScene().getWindow();
             Stage stage = getStage();
             tabPane.setOnMousePressed(event -> {
                 xOffset = event.getSceneX();
@@ -229,43 +294,8 @@ public class MainController {
     public void setLoggedIn(String username) {
         this.loggedIn = true;
         this.username = username;
-        // update user info on top-right
-        updateUserInfo();
     }
 
-    private void updateUserInfo() {
-        // example: update top-right label
-        if (loggedIn) {
-            userMenu.getItems().clear();
-            usernameItem.setText(username);
-            usernameItem.setDisable(true);
-            userMenu.getItems().addAll(usernameItem, logoutItem);
-        }
-    }
-
-    // login example
-    private void login() {
-        System.out.println("Executing login logic...");
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
-            AnchorPane loginRoot = loader.load();
-            LoginController loginController = loader.getController();
-            loginController.setMainController(this);
-            // create new Stage
-            Stage loginStage = new Stage();
-            // set owner
-            loginStage.initOwner(contentPane.getScene().getWindow());
-            loginStage.initModality(Modality.APPLICATION_MODAL); // block parent window
-            loginStage.setTitle("Login");
-            loginStage.setScene(new Scene(loginRoot));
-            loginStage.setResizable(false);
-            loginStage.showAndWait();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    // logout
     private void logout() {
         loggedIn = false;
         username = "";
@@ -280,17 +310,14 @@ public class MainController {
     @FXML
     private void maximizeWindow() {
         Stage stage = (Stage) tabPane.getScene().getWindow();
-
         Rectangle2D screenBounds = Screen.getPrimary().getVisualBounds();
 
         if (!maximized) {
-            // save current window position & size
             prevX = stage.getX();
             prevY = stage.getY();
             prevWidth = stage.getWidth();
             prevHeight = stage.getHeight();
 
-            // maximize to visual bounds
             stage.setX(screenBounds.getMinX());
             stage.setY(screenBounds.getMinY());
             stage.setWidth(screenBounds.getWidth());
@@ -298,7 +325,6 @@ public class MainController {
 
             maximized = true;
         } else {
-            // restore
             stage.setX(prevX);
             stage.setY(prevY);
             stage.setWidth(prevWidth);
@@ -339,12 +365,10 @@ public class MainController {
 
         if (file != null) {
             try (FileWriter writer = new FileWriter(file)) {
-                // write header
                 List<Column> javaFields = JavaConverters.seqAsJavaList(currentDf.schema().columns().toSeq());
                 writer.write(String.join(",", javaFields.stream().map(Column::name).toArray(String[]::new)));
                 writer.write("\n");
 
-                // write rows
                 List<Row> rows = JavaConverters.seqAsJavaList(currentDf.collect().toSeq());
                 for (Row row : rows) {
                     for (int i = 0; i < javaFields.size(); i++) {
@@ -383,7 +407,7 @@ public class MainController {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/favorite.fxml"));
             BorderPane favoriteRoot = loader.load();
             FavoriteController controller = loader.getController();
-            controller.setMainController(this); // inject TestController
+            controller.setMainController(this);
             contentPane.getChildren().clear();
             contentPane.getChildren().add(favoriteRoot);
         } catch (Exception e) {
@@ -392,55 +416,43 @@ public class MainController {
     }
 
     private void queryAndShow(String url) {
-
         try {
-            if (url.contains("/get/") && !this.loggedIn) {
-                // show login required
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Access Denied");
-                alert.setHeaderText(null);
-                alert.setContentText("This data requires sign-in. Please log in first!");
-                alert.showAndWait();
-
+            if (!hasAccess(url) && !this.loggedIn) {
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
                 Parent root = loader.load();
-                // get controller
                 LoginController loginController = loader.getController();
                 loginController.setMainController(this);
-                // open login dialog
+
                 Stage loginStage = new Stage();
-                loginStage.initModality(Modality.APPLICATION_MODAL); // block parent
+                loginStage.initModality(Modality.APPLICATION_MODAL);
                 loginStage.setTitle("User Login");
                 loginStage.setScene(new Scene(root));
                 loginStage.setResizable(false);
                 loginStage.showAndWait();
                 return;
             }
-            // 2. get DataFrame
             try {
                 DataFrame df = fairdClient.get(url);
-
                 currentDf = df;
-                // 3. load list.fxml
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
                 BorderPane listRoot = loader.load();
-                // 4. pass DataFrame to ListController
                 ListController controller = loader.getController();
                 controller.setMainController(this);
-
-//                controller.setUrl(url);
                 controller.setCurrentUrl(url);
                 controller.setDataFrame(df);
-                // replace center content
+
                 contentPane.getChildren().clear();
                 contentPane.getChildren().add(listRoot);
 
                 this.currentUrl = url;
-                // keep input field synced
                 inputField.setText(url);
 
                 backButton.setDisable(backStack.isEmpty());
                 forwardButton.setDisable(forwardStack.isEmpty());
+
+                if (!historyUrls.contains(url)) {
+                    historyUrls.add(url);
+                }
 
             } catch (Exception e) {
                 System.out.println(e.getMessage());
@@ -460,17 +472,13 @@ public class MainController {
     }
 
     public void skipQueryList(String skipURL) {
-        // validate target URL and avoid redundant reload
         if (skipURL == null || skipURL.trim().isEmpty() || skipURL.equals(this.currentUrl)) {
             return;
         }
-        // push current URL into back history if exists
         if (!this.currentUrl.isEmpty()) {
             backStack.push(this.currentUrl);
         }
-        // clear forward history for a new navigation path
         forwardStack.clear();
-        // load new page
         queryAndShow(skipURL);
     }
 
@@ -489,19 +497,5 @@ public class MainController {
         forwardStack.clear();
 
         queryAndShow(newUrl);
-    }
-
-    @FXML
-    private void login(ActionEvent event) {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml")); // login page FXML
-            Parent root = loader.load();
-            Stage stage = (Stage) loginButton.getScene().getWindow();
-            stage.setScene(new Scene(root));
-            stage.setTitle("User Login");
-            stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }

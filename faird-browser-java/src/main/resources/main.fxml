@@ -119,12 +119,12 @@
                 </Button>
 
 
-                <!-- 用户图标 -->
-                <ImageView fx:id="userIcon" fitWidth="30" fitHeight="30" pickOnBounds="true" >
-                    <image>
-                        <Image url="@用户icon.png"/>
-                    </image>
-                </ImageView>
+<!--                &lt;!&ndash; 用户图标 &ndash;&gt;-->
+<!--                <ImageView fx:id="userIcon" fitWidth="30" fitHeight="30" pickOnBounds="true" >-->
+<!--                    <image>-->
+<!--                        <Image url="@用户icon.png"/>-->
+<!--                    </image>-->
+<!--                </ImageView>-->
             </HBox>
         </VBox>
     </top>
