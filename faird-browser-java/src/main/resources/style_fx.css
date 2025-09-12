@@ -60,6 +60,10 @@
     -fx-text-fill: white;
 }
 
+.table-row-cell:selected .table-cell {
+    -fx-background-color: -fx-selection-bar;   /* JavaFX 内置默认颜色 */
+    -fx-text-fill: -fx-selection-bar-text;    /* JavaFX 内置默认文字颜色 */
+}
 
 
 

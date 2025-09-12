@@ -68,6 +68,10 @@ public class ListController {
             Column field = javaFields.get(colIndex);
 
             String colName = field.name();
+            // 跳过空名字列
+            if (colName == null || colName.trim().isEmpty()) {
+                continue;
+            }
             String colType = field.colType().toString();
             TableColumn<Row, String> column = new TableColumn<>(colName);
 

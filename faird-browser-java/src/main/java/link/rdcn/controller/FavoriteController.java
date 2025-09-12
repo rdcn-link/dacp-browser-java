@@ -7,9 +7,7 @@ public class FavoriteController {
 
     @FXML
     private ListView<String> favoriteListView;
-
     private MainController mainController;
-
     public void setMainController(MainController controller) {
         this.mainController = controller;
     }

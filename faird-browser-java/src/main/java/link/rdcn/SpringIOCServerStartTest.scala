@@ -16,6 +16,7 @@ import org.springframework.core.io.ClassPathResource
 
 import java.util
 import java.util.Arrays
+import scala.io.Source
 
 class SpringIOCServerStartTest {
   @Test
@@ -41,6 +42,7 @@ class SpringIOCServerStartTest {
     dacpServer.start(new FairdConfig)
     val dacpClient = FairdClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
     val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSets")
+//    println(dfDataSets.schema.columns)
     println("#########DataSet List")
     dfDataSets.foreach(println)
     val dfNames = dacpClient.get("dacp://0.0.0.0:3101/listDataFrames/dataSet1")
@@ -49,11 +51,10 @@ class SpringIOCServerStartTest {
     val hostInfos = dacpClient.get("dacp://0.0.0.0:3101/listHostInfo")
     println("#########Host List")
     hostInfos.foreach(println)
-    val df = dacpClient.get("dacp://0.0.0.0:3101/dataFrame1")
-    println("###########println DataFrame")
-    val s: StructType = df.schema
-    df.foreach(println)
-
+//    val df = dacpClient.get("dacp://0.0.0.0:3101/dataFrame1")
+//    println("###########println DataFrame")
+//    val s: StructType = df.schema
+//    df.foreach(println)
   }
 
 }
@@ -107,65 +108,14 @@ class DataProviderTest extends DataProvider {
    * @param dataFrameName 数据帧名（如 mnt/a.csv)
    * @return 数据流源
    */
-//  override def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
-//    override def rowCount: Long = -1
-//
-//    override def schema: StructType = StructType.empty.add("col1", StringType)
-//
-//    override def iterator: ClosableIterator[Row] = {
-//      val rows =Seq.range(0, 100).map(index => Row.fromSeq(Seq("id"+index))).toIterator
-//      ClosableIterator(rows)()
-//    }
-//  }
+  def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
 
+    override def rowCount: Long = -1 // 如果不知道总行数
 
-//  override def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
-//    override def rowCount: Long = -1
-//
-//    // 定义 10 列
-//    override def schema: StructType = StructType.empty
-//      .add("col1", IntType)
-//      .add("col2", DoubleType)
-//      .add("col3", StringType)
-//      .add("col4", StringType)
-//      .add("col5", StringType)
-//      .add("col6", StringType)
-//      .add("col7", StringType)
-//      .add("col8", StringType)
-//      .add("col9", StringType)
-//      .add("col10", StringType)
-//
-//    override def iterator: ClosableIterator[Row] = {
-//      val rows = Seq.range(0, 1000).map { index =>
-//        // 每行生成 10 列示例数据
-//        Row.fromSeq(Seq(
-//          index,
-//          index*1.0,
-//          s"type$index",
-//          s"value$index",
-//          s"status$index",
-//          s"col6_$index",
-//          s"col7_$index",
-//          s"col8_$index",
-//          s"col9_$index",
-//          s"col10_$index"
-//        ))
-//      }.toIterator
-//      ClosableIterator(rows)()
-//    }
-//  }
-
-  import java.sql.Timestamp
-  import java.text.SimpleDateFormat
-
-  override def getDataStreamSource(dataFrameName: String): DataStreamSource = new DataStreamSource {
-    override def rowCount: Long = -1  // 如果不知道总行数，保持 -1
-
-    // 定义 schema，字段名和类型对应 CSV
     override def schema: StructType = StructType.empty
       .add("VendorID", IntType)
-      .add("tpep_pickup_datetime", StringType)       // 如果需要可转成 TimestampType
-      .add("tpep_dropoff_datetime", StringType)      // 同上
+      .add("tpep_pickup_datetime", StringType)
+      .add("tpep_dropoff_datetime", StringType)
       .add("passenger_count", IntType)
       .add("trip_distance", DoubleType)
       .add("pickup_longitude", DoubleType)
@@ -183,39 +133,46 @@ class DataProviderTest extends DataProvider {
       .add("improvement_surcharge", DoubleType)
       .add("total_amount", DoubleType)
 
+    // 安全转换函数
+    private def safeToInt(s: String): Int = if (s == null || s.trim.isEmpty) 0 else s.toInt
+    private def safeToDouble(s: String): Double = if (s == null || s.trim.isEmpty) 0.0 else s.toDouble
+
     override def iterator: ClosableIterator[Row] = {
-      val source = scala.io.Source.fromFile("/Volumes/My Passport/archive/yellow_tripdata_2015-01.csv")  // CSV 文件路径
+      val source = Source.fromFile("/Volumes/My Passport/archive/yellow_tripdata_2015-01.csv")
       val lines = source.getLines()
 
       // 跳过表头
       val dataLines = lines.drop(1)
 
+      // 转换每一行成 Row
       val rows = dataLines.map { line =>
-        val parts = line.split(",")  // 你给的示例是 tab 分隔符，如果是逗号，改成 ","
+        // 使用正则处理引号包裹的字段，保证 split 安全
+        val parts = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1).map(_.replaceAll("^\"|\"$", ""))
 
         Row.fromSeq(Seq(
-          parts(0).toInt,
-          parts(1),  // pickup 时间
-          parts(2),  // dropoff 时间
-          parts(3).toInt,
-          parts(4).toDouble,
-          parts(5).toDouble,
-          parts(6).toDouble,
-          parts(7).toInt,
+          safeToInt(parts(0)),
+          parts(1),
+          parts(2),
+          safeToInt(parts(3)),
+          safeToDouble(parts(4)),
+          safeToDouble(parts(5)),
+          safeToDouble(parts(6)),
+          safeToInt(parts(7)),
           parts(8),
-          parts(9).toDouble,
-          parts(10).toDouble,
-          parts(11).toInt,
-          parts(12).toDouble,
-          parts(13).toDouble,
-          parts(14).toDouble,
-          parts(15).toDouble,
-          parts(16).toDouble,
-          parts(17).toDouble,
-          parts(18).toDouble
+          safeToDouble(parts(9)),
+          safeToDouble(parts(10)),
+          safeToInt(parts(11)),
+          safeToDouble(parts(12)),
+          safeToDouble(parts(13)),
+          safeToDouble(parts(14)),
+          safeToDouble(parts(15)),
+          safeToDouble(parts(16)),
+          safeToDouble(parts(17)),
+          safeToDouble(parts(18))
         ))
       }.toIterator
 
+      // 使用 ClosableIterator 确保资源关闭
       ClosableIterator(rows) { source.close() }
     }
   }

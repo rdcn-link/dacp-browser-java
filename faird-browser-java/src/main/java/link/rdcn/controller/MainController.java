@@ -13,7 +13,6 @@ import javafx.scene.control.*;
 import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -31,15 +30,30 @@ import link.rdcn.struct.Column;
 import link.rdcn.struct.DataFrame;
 import link.rdcn.struct.Row;
 import link.rdcn.user.Credentials;
+import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.types.pojo.FieldType;
+import org.apache.arrow.vector.types.pojo.Schema;
 import scala.collection.JavaConverters;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import org.apache.arrow.memory.RootAllocator;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.ipc.ArrowFileWriter;
+
+
+import java.io.FileOutputStream;
+import java.nio.channels.Channels;
 
 public class MainController {
 
@@ -134,11 +148,30 @@ public class MainController {
     }
 
     protected void setFaridClient(FairdClient faridClient) {
-        if (this.fairdClient != null) {
-            this.fairdClient.close();
+        FairdClient oldClient = this.fairdClient;
+        // 先断开与旧 client 相关的 DataFrame（如果存在）
+        if (this.currentDf != null) {
+            try {
+                // 假设没有 close 方法，则至少把引用清掉，避免后续访问
+                this.currentDf = null;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+
+        // 先关闭旧 client（确保所有 FlightStream/资源都应已被释放）
+        if (oldClient != null) {
+            try {
+                oldClient.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 最后设置新 client
         this.fairdClient = faridClient;
     }
+
 
     private Stage getStage() {
         if (contentPane != null && contentPane.getScene() != null) {
@@ -178,12 +211,10 @@ public class MainController {
             if (ignoreTextChange) {
                 return; // 页面前进/后退或程序设置，不显示提示
             }
-
             if (newVal == null || newVal.trim().isEmpty()) {
                 suggestionMenu.hide();
                 return;
             }
-
             List<String> favorites = FavoriteManager.getFavorites();
             List<String> historyMatches = historyUrls.stream()
                     .filter(url -> url.startsWith(newVal))
@@ -258,7 +289,6 @@ public class MainController {
                     suggestionMenu.getItems().add(item);
                 }
 
-
                 // 添加 “查看收藏夹” 链接
                 Label viewFavoritesLabel = new Label("查看收藏夹");
                 viewFavoritesLabel.setStyle("-fx-text-fill: blue; -fx-underline: true;"); // 蓝色下划线，像链接
@@ -267,7 +297,8 @@ public class MainController {
                     suggestionMenu.hide();
                 });
                 CustomMenuItem viewFavoritesItem = new CustomMenuItem(viewFavoritesLabel);
-                viewFavoritesItem.setHideOnClick(false); // 点击不会自动隐藏
+                viewFavoritesItem.setHideOnClick(false);
+                viewFavoritesLabel.setCursor(Cursor.HAND);// 点击不会自动隐藏
                 suggestionMenu.getItems().add(viewFavoritesItem);
             }
 
@@ -351,40 +382,175 @@ public class MainController {
 
     @FXML
     private void downloadFile() {
-        System.out.println("downloading!!!");
-        if (currentDf == null) {
-            return;
-        }
-
         FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Save as CSV File");
-        fileChooser.getExtensionFilters().add(
-                new FileChooser.ExtensionFilter("CSV File", "*.csv")
+        fileChooser.setTitle("Save File");
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("CSV File", "*.csv"),
+                new FileChooser.ExtensionFilter("Arrow File", "*.arrow")
         );
         File file = fileChooser.showSaveDialog(rootPane.getScene().getWindow());
 
         if (file != null) {
-            try (FileWriter writer = new FileWriter(file)) {
-                List<Column> javaFields = JavaConverters.seqAsJavaList(currentDf.schema().columns().toSeq());
-                writer.write(String.join(",", javaFields.stream().map(Column::name).toArray(String[]::new)));
-                writer.write("\n");
-
-                List<Row> rows = JavaConverters.seqAsJavaList(currentDf.collect().toSeq());
-                for (Row row : rows) {
-                    for (int i = 0; i < javaFields.size(); i++) {
-                        Object value = row.get(i);
-                        writer.write(value != null ? value.toString() : "");
-                        if (i < javaFields.size() - 1) {
-                            writer.write(",");
-                        }
-                    }
-                    writer.write("\n");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            String fileName = file.getName().toLowerCase();
+            if (fileName.endsWith(".csv")) {
+                saveAsCsv(file);
+            } else if (fileName.endsWith(".arrow")) {
+                saveAsArrow(file);
             }
         }
     }
+
+    private static void writeCsvBatchSafe(FileWriter writer, List<Row> batch, List<Column> javaFields) throws Exception {
+        for (Row row : batch) {
+            for (int i = 0; i < javaFields.size(); i++) {
+                Object value = row.get(i);
+                String safeValue = value == null ? "" : value.toString().replace("\"", "\"\"");
+
+                // 处理数字列，避免空字符串报错
+                if (isNumericColumn(javaFields.get(i))) {
+                    if (safeValue.isEmpty()) {
+                        safeValue = "0"; // 或者用 "" 保持空值
+                    }
+                }
+
+                writer.write("\"" + safeValue + "\"");
+                if (i < javaFields.size() - 1) writer.write(",");
+            }
+            writer.write("\n");
+        }
+    }
+
+    // 判断是否是数字列，可以根据你的实际类型判断
+    private static boolean isNumericColumn(Column column) {
+        String typeName = column.colType().toString(); // 这里假设 Column 有 dataType 方法
+        return typeName.equalsIgnoreCase("double") || typeName.equalsIgnoreCase("float") ||
+                typeName.equalsIgnoreCase("int") || typeName.equalsIgnoreCase("long");
+    }
+
+
+
+    private void saveAsCsv(File file) {
+        final int batchSize = 1000; // 每 1000 行 flush 一次
+
+        try (FileWriter writer = new FileWriter(file)) {
+            // 写表头
+            List<Column> javaFields = JavaConverters.seqAsJavaList(currentDf.schema().columns().toSeq());
+            writer.write(String.join(",", javaFields.stream().map(Column::name).toArray(String[]::new)));
+            writer.write("\n");
+
+            // 准备一个用于批处理的 List
+            List<Row> batch = new ArrayList<>(batchSize);
+
+            // 使用 mapIterator，但进行两处关键修改
+            currentDf.mapIterator(it -> {
+                // 在 lambda 内部处理所有数据
+                while (it.hasNext()) {
+                    Row row = it.next();
+                    batch.add(row);
+
+                    if (batch.size() >= batchSize) {
+                        try {
+                            writeCsvBatchSafe(writer, batch, javaFields);
+                        } catch (Exception e) {
+                            // 在 lambda 内部，通常需要将检查型异常转换为运行时异常
+                            throw new RuntimeException(e);
+                        }
+//                        System.out.println("写入批次，当前已处理批次数：" + batch.size());
+                        batch.clear();
+                    }
+                }
+                // 1. 【重要修改】将写入剩余数据的逻辑移到 lambda 内部
+                // 确保在迭代器消费完毕后，立刻处理最后一批数据。
+                if (!batch.isEmpty()) {
+                    try {
+                        writeCsvBatchSafe(writer, batch, javaFields);
+                        System.out.println("写入最后一批剩余数据。");
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+                // 2. 【重要修改】返回一个空的迭代器，而不是 null
+                // 这遵守了 mapIterator 的 API 约定，可以防止框架崩溃。
+                return java.util.Collections.emptyIterator();
+            });
+            System.out.println("CSV 文件导出操作已提交。");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+    private void saveAsArrow(File file) {
+        try (RootAllocator allocator = new RootAllocator(Long.MAX_VALUE)) {
+
+            List<Column> javaFields = JavaConverters.seqAsJavaList(currentDf.schema().columns().toSeq());
+            List<Field> fields = new ArrayList<>();
+
+            // 构建 Arrow Schema（先全部 Utf8，如果需要可以细化 Int/Double）
+            for (Column col : javaFields) {
+                FieldType fieldType = new FieldType(true, ArrowType.Utf8.INSTANCE, null);
+                fields.add(new Field(col.name(), fieldType, null));
+            }
+
+            Schema schema = new Schema(fields);
+
+            try (VectorSchemaRoot root = VectorSchemaRoot.create(schema, allocator);
+                 FileOutputStream fos = new FileOutputStream(file);
+                 WritableByteChannel channel = Channels.newChannel(fos);
+                 ArrowFileWriter writer = new ArrowFileWriter(root, null, channel)) {
+
+                writer.start();
+
+                int batchSize = 1024;
+                List<Row> buffer = new ArrayList<>(batchSize);
+                AtomicInteger cnt = new AtomicInteger();
+
+                // ✅ 用 mapIterator 消费 ClosableIterator<Row>
+                currentDf.mapIterator(it -> {
+                    try {
+                        while (it.hasNext()) {
+                            buffer.clear();
+                            for (int i = 0; i < batchSize && it.hasNext(); i++) {
+                                buffer.add(it.next());
+                            }
+                            int rowCount = buffer.size();
+                            // 填充 Arrow 向量
+                            for (int j = 0; j < javaFields.size(); j++) {
+                                VarCharVector vec = (VarCharVector) root.getVector(j);
+                                vec.allocateNew(rowCount);
+                                for (int i = 0; i < rowCount; i++) {
+                                    Object value = buffer.get(i).get(j);
+                                    if (value != null) {
+                                        vec.setSafe(i, value.toString().getBytes());
+                                    }
+                                }
+                                vec.setValueCount(rowCount);
+                            }
+
+                            root.setRowCount(rowCount);
+                            writer.writeBatch();
+                            cnt.getAndIncrement();
+//                            System.out.println(cnt.get());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    return null; // 因为 mapIterator 要有返回值，这里没用就返回 null
+                });
+
+                writer.end();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
 
     @FXML
     private void handleStar(ActionEvent event) {
@@ -479,7 +645,9 @@ public class MainController {
             backStack.push(this.currentUrl);
         }
         forwardStack.clear();
+        ignoreTextChange = true;
         queryAndShow(skipURL);
+        ignoreTextChange = false;
     }
 
     @FXML
