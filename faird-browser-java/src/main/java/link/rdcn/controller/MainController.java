@@ -215,7 +215,7 @@ public class MainController {
                 suggestionMenu.hide();
                 return;
             }
-            List<String> favorites = FavoriteManager.getFavorites();
+            List<String> favorites = new ArrayList<>(FavoriteManager.getFavorites().values());
             List<String> historyMatches = historyUrls.stream()
                     .filter(url -> url.startsWith(newVal))
                     .collect(Collectors.toList());
@@ -281,6 +281,7 @@ public class MainController {
                     CustomMenuItem item = new CustomMenuItem(itemBox);
                     item.setOnAction(e -> {
                         inputField.setText(url);
+                        suggestionMenu.hide();
 //                        favoriteMatches.hide(); // 点击时隐藏
                     });
                     item.setHideOnClick(false);
@@ -552,24 +553,51 @@ public class MainController {
 
 
 
+//    @FXML
+//    private void handleStar(ActionEvent event) {
+//        String currentUrl = inputField.getText();
+//        isCollected = !isCollected;
+//        if (isCollected) {
+//            starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFD700; -fx-font-size: 18px;");
+//            System.out.println("Favorited URL: " + currentUrl);
+//            FavoriteManager.addFavorite(currentUrl);
+//        } else {
+//            starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #999999; -fx-font-size: 18px;");
+//            System.out.println("Unfavorited URL: " + currentUrl);
+//            FavoriteManager.removeFavorite(currentUrl);
+//        }
+//    }
     @FXML
     private void handleStar(ActionEvent event) {
         String currentUrl = inputField.getText();
         isCollected = !isCollected;
+
         if (isCollected) {
-            starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFD700; -fx-font-size: 18px;");
-            System.out.println("Favorited URL: " + currentUrl);
-            FavoriteManager.addFavorite(currentUrl);
+            // 弹出输入框，获取收藏名
+            TextInputDialog dialog = new TextInputDialog();
+            dialog.setTitle("收藏网址");
+            dialog.setHeaderText("请输入收藏URL的名称");
+            dialog.setContentText("名称：");
+
+            dialog.showAndWait().ifPresent(name -> {
+                starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFD700; -fx-font-size: 18px;");
+                System.out.println("Favorited: " + name + " -> " + currentUrl);
+                FavoriteManager.addFavorite(name, currentUrl);
+            });
+
         } else {
+            // 如果取消收藏，默认按 URL 删除
             starButton.setStyle("-fx-background-color: transparent; -fx-text-fill: #999999; -fx-font-size: 18px;");
             System.out.println("Unfavorited URL: " + currentUrl);
             FavoriteManager.removeFavorite(currentUrl);
         }
     }
 
+
     @FXML
     private void openFavorites() {
         try {
+            currentUrl = "";
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/favorite.fxml"));
             BorderPane favoriteRoot = loader.load();
             FavoriteController controller = loader.getController();
