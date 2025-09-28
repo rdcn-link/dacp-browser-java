@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ScalaCompilerConfiguration">
-    <profile name="Maven 1" modules="faird-core,faird-java,faird-plugin,faird-plugin-impl" />
+    <profile name="Maven 1" modules="dacp-browser-java,dacp-browser-java1,faird-browser-java,faird-core,faird-java,faird-plugin,faird-plugin-impl" />
   </component>
 </project>

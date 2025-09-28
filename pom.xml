@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.example</groupId>
-  <artifactId>faird-browser-java</artifactId>
+  <artifactId>dacp-browser-java</artifactId>
   <version>1.0-alpha-202509280</version>
   <packaging>jar</packaging>
 
@@ -12,9 +12,15 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <scala.version>2.12.8</scala.version>
   </properties>
 
   <dependencies>
+      <dependency>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>scala-library</artifactId>
+          <version>${scala.version}</version>
+      </dependency>
       <dependency>
           <groupId>io.github.palexdev</groupId>
           <artifactId>materialfx</artifactId>
@@ -26,16 +32,9 @@
           <version>0.5.0-20250920</version>
       </dependency>
       <dependency>
-          <groupId>junit</groupId>
-          <artifactId>junit</artifactId>
-          <version>3.8.1</version>
-<!--          <scope>test</scope>-->
-      </dependency>
-      <dependency>
           <groupId>org.junit.jupiter</groupId>
           <artifactId>junit-jupiter-params</artifactId>
           <version>5.13.1</version>
-<!--          <scope>test</scope>-->
       </dependency>
   </dependencies>
 

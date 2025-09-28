@@ -1,4 +1,4 @@
-package link.rdcn;
+package link.rdcn.server;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -8,7 +8,6 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.util.Objects;
-
 
 public class TestJavaFXMain extends Application {
 

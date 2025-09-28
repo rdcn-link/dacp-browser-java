@@ -6,10 +6,14 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="faird-core" />
-        <module name="faird-plugin" />
-        <module name="faird-plugin-impl" />
+        <module name="dacp-browser-java" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="faird-core" target="1.8" />
+      <module name="faird-java" target="1.8" />
+      <module name="faird-plugin" target="1.8" />
+      <module name="faird-plugin-impl" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

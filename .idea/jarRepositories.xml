@@ -12,6 +12,16 @@
       <option name="url" value="http://10.0.82.220:8081/repository/maven-public/" />
     </remote-repository>
     <remote-repository>
+      <option name="id" value="sdc-central" />
+      <option name="name" value="sdcCentral" />
+      <option name="url" value="http://10.0.82.220:8081/repository/maven-central/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="sdc-public" />
+      <option name="name" value="sdcPublic" />
+      <option name="url" value="http://10.0.82.220:8081/repository/maven-public/" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="central" />
       <option name="name" value="central" />
       <option name="url" value="https://repo1.maven.org/maven2/" />
