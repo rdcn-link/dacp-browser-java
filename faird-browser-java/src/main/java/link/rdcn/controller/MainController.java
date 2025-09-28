@@ -18,14 +18,17 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
-import link.rdcn.FairdConfig;
+//import link.rdcn.FairdConfig;
 
-import link.rdcn.client.dacp.FairdClient;
+//import link.rdcn.client.dacp.FairdClient;
 import link.rdcn.AuthorProviderTest;
 import link.rdcn.DataProviderTest;
 import link.rdcn.DataReceiverTest;
 
-import link.rdcn.server.dacp.DacpServer;
+//import link.rdcn.server.dacp.DacpServer;
+import link.rdcn.dacp.FairdConfig;
+import link.rdcn.dacp.client.DacpClient;
+import link.rdcn.dacp.server.DacpServer;
 import link.rdcn.struct.Column;
 import link.rdcn.struct.DataFrame;
 import link.rdcn.struct.Row;
@@ -109,7 +112,7 @@ public class MainController {
 
     // DACP server
     private static DacpServer dacpServer;
-    private FairdClient fairdClient;
+    private DacpClient fairdClient;
 
     private final Stack<String> backStack = new Stack<>();   // back history
     private final Stack<String> forwardStack = new Stack<>(); // forward history
@@ -147,8 +150,8 @@ public class MainController {
         }
     }
 
-    protected void setFaridClient(FairdClient faridClient) {
-        FairdClient oldClient = this.fairdClient;
+    protected void setFaridClient(DacpClient faridClient) {
+        DacpClient oldClient = this.fairdClient;
         // 先断开与旧 client 相关的 DataFrame（如果存在）
         if (this.currentDf != null) {
             try {
@@ -370,13 +373,13 @@ public class MainController {
         ((Stage) tabPane.getScene().getWindow()).close();
     }
 
-    private FairdClient getClient() {
+    private DacpClient getClient() {
         if (dacpServer == null) {
             dacpServer = new DacpServer(new DataProviderTest(), new DataReceiverTest(), new AuthorProviderTest());
             dacpServer.start(new FairdConfig());
         }
         if (fairdClient == null) {
-            fairdClient = FairdClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS());
+            fairdClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS());
         }
         return fairdClient;
     }
@@ -575,7 +578,7 @@ public class MainController {
         if (isCollected) {
             // 弹出输入框，获取收藏名
             TextInputDialog dialog = new TextInputDialog();
-            dialog.setTitle("收藏网址");
+            dialog.setTitle("收藏URL");
             dialog.setHeaderText("请输入收藏URL的名称");
             dialog.setContentText("名称：");
 

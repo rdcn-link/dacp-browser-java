@@ -4,7 +4,7 @@
 
   <groupId>org.example</groupId>
   <artifactId>faird-browser-java</artifactId>
-  <version>1.0-alpha-202509170</version>
+  <version>1.0-alpha-202509280</version>
   <packaging>jar</packaging>
 
   <name>faird-browser-java</name>
@@ -15,11 +15,6 @@
   </properties>
 
   <dependencies>
-<!--      <dependency>-->
-<!--          <groupId>org.grapheco</groupId>-->
-<!--          <artifactId>lynx</artifactId>-->
-<!--          <version>0.6.8</version>-->
-<!--      </dependency>-->
       <dependency>
           <groupId>io.github.palexdev</groupId>
           <artifactId>materialfx</artifactId>
@@ -27,20 +22,21 @@
       </dependency>
       <dependency>
           <groupId>link.rdcn</groupId>
-          <artifactId>faird-plugin</artifactId>
-          <version>1.0-alpha-202509051</version>
+          <artifactId>dacp-core</artifactId>
+          <version>0.5.0-20250920</version>
       </dependency>
       <dependency>
-          <groupId>link.rdcn</groupId>
-          <artifactId>faird-core</artifactId>
-          <version>1.0-alpha-202509051</version>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>3.8.1</version>
+<!--          <scope>test</scope>-->
       </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-params</artifactId>
+          <version>5.13.1</version>
+<!--          <scope>test</scope>-->
+      </dependency>
   </dependencies>
 
     <build>

@@ -4,7 +4,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import link.rdcn.client.dacp.FairdClient;
+//import link.rdcn.client.dacp.FairdClient;
+import link.rdcn.dacp.client.DacpClient;
 import link.rdcn.user.UsernamePassword;
 
 import java.util.HashMap;
@@ -50,7 +51,7 @@ public class LoginController {
         }
 
         UsernamePassword user = new UsernamePassword(username, password);
-        mainController.setFaridClient(FairdClient.connect("dacp://0.0.0.0:3101", user));
+        mainController.setFaridClient(DacpClient.connect("dacp://0.0.0.0:3101", user));
 
 
         if (!userDatabase.containsKey(username) || !userDatabase.get(username).equals(password)) {

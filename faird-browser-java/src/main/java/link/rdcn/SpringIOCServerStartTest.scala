@@ -1,16 +1,29 @@
 package link.rdcn
 
-import link.rdcn.client.dacp.FairdClient
+//import link.rdcn.client.dacp.FairdClient
+import link.rdcn.dacp.FairdConfig
+import link.rdcn.dacp.client.DacpClient
+import link.rdcn.dacp.received.DataReceiver
+import link.rdcn.dacp.server.DacpServer
+import link.rdcn.dacp.user.{AuthProvider, DataOperationType}
 import link.rdcn.provider.{DataFrameDocument, DataFrameStatistics, DataProvider}
-import link.rdcn.received.DataReceiver
-import link.rdcn.server.dacp.DacpServer
+import link.rdcn.struct.ClosableIterator
+import org.junit.jupiter.api.Test
+//import link.rdcn.received.DataReceiver
+//import link.rdcn.server.dacp.DacpServer
 import link.rdcn.struct.ValueType.{DoubleType, IntType, StringType}
 import link.rdcn.struct.{DataFrame, DataStreamSource, Row, StructType}
 import link.rdcn.user._
-import link.rdcn.util.ClosableIterator
-import link.rdcn.{ConfigLoader, FairdConfig}
+//import link.rdcn.util.ClosableIterator
+//import link.rdcn.{ConfigLoader, FairdConfig}
 import org.apache.jena.rdf.model.Model
-import org.junit.jupiter.api.Test
+//import org.junit.jupiter.api.Test
+////import org.junit
+//import junit.framework.Test
+//import junit.framework.TestCase
+//import junit.framework.TestSuite
+
+
 import org.springframework.beans.factory.xml.XmlBeanFactory
 import org.springframework.core.io.ClassPathResource
 
@@ -19,30 +32,74 @@ import java.util.Arrays
 import scala.io.Source
 
 class SpringIOCServerStartTest {
+//  @Test
+//  def serverStart(): Unit = {
+//    val f = new XmlBeanFactory(new ClassPathResource("applicationContext.xml"))
+//    val dataReceiver = f.getBean("dataReceiver").asInstanceOf[DataReceiver]
+//    val dataProvider = f.getBean("dataProvider").asInstanceOf[DataProvider]
+//    val authProvider = f.getBean("authProvider").asInstanceOf[AuthProvider]
+//    val fairdHome = getClass.getClassLoader.getResource("").getPath
+//
+//    val server: DacpServer = new DacpServer(dataProvider, dataReceiver, authProvider)
+////    ConfigLoader.init(fairdHome)
+//    val fairdConfig = new FairdConfig()
+//    server.start(fairdConfig)
+//    server.start(fairdConfig)
+//    val client = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
+////    val client = FairdClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
+//    assert(client.listDataSetNames().head == "dataSet1")
+//    assert(client.listDataFrameNames("dataSet1").head == "dataFrame1")
+//  }
+
+
+
+//  @Test
+//  def serverDstpTest(): Unit = {
+//    val dacpServer = new DacpServer(new DataProviderTest, new DataReceiverTest, new AuthorProviderTest)
+//    dacpServer.start(new FairdConfig)
+//    val dacpClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
+//    val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSets")
+////    println(dfDataSets.schema.columns)
+//    println("#########DataSet List")
+//    dfDataSets.foreach(println)
+//    val dfNames = dacpClient.get("dacp://0.0.0.0:3101/listDataFrames/dataSet1")
+//    println("#########DataFrame List")
+//    dfNames.foreach(println)
+//    val hostInfos = dacpClient.get("dacp://0.0.0.0:3101/listHostInfo")
+//    println("#########Host List")
+//    hostInfos.foreach(println)
+//    val df = dacpClient.get("dacp://0.0.0.0:3101/dataFrame1")
+//    println("###########println DataFrame")
+//    val s: StructType = df.schema
+//    df.foreach(println)
+//  }
   @Test
-  def serverStart(): Unit = {
-    val f = new XmlBeanFactory(new ClassPathResource("applicationContext.xml"))
-    val dataReceiver = f.getBean("dataReceiver").asInstanceOf[DataReceiver]
-    val dataProvider = f.getBean("dataProvider").asInstanceOf[DataProvider]
-    val authProvider = f.getBean("authProvider").asInstanceOf[AuthProvider]
-    val fairdHome = getClass.getClassLoader.getResource("").getPath
-
-    val server: DacpServer = new DacpServer(dataProvider, dataReceiver, authProvider)
-
-    ConfigLoader.init(fairdHome)
-    server.start(ConfigLoader.fairdConfig)
-    val client = FairdClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
-    assert(client.listDataSetNames().head == "dataSet1")
-    assert(client.listDataFrameNames("dataSet1").head == "dataFrame1")
-  }
-
-  @Test
-  def serverDstpTest(): Unit = {
+  def serverDftpTest(): Unit = {
     val dacpServer = new DacpServer(new DataProviderTest, new DataReceiverTest, new AuthorProviderTest)
     dacpServer.start(new FairdConfig)
-    val dacpClient = FairdClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
+
+    val dacpClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
+    println("#########DataSet List")
+
     val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSets")
-//    println(dfDataSets.schema.columns)
+    println("#########DataSet List")
+    dfDataSets.foreach(println)
+    val dfNames = dacpClient.get("dacp://0.0.0.0:3101/listDataFrames/csv")
+    println("#########DataFrame List")
+    dfNames.foreach(println)
+    val df = dacpClient.get("dacp://0.0.0.0:3101/get/csv")
+    println("###########println DataFrame")
+    val s: StructType = df.schema
+    df.foreach(println)
+
+  }
+
+
+  @Test
+  def clientTest(): Unit = {
+    val dacpClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
+    val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSets")
+    //    println(dfDataSets.schema.columns)
     println("#########DataSet List")
     dfDataSets.foreach(println)
     val dfNames = dacpClient.get("dacp://0.0.0.0:3101/listDataFrames/dataSet1")
@@ -51,23 +108,25 @@ class SpringIOCServerStartTest {
     val hostInfos = dacpClient.get("dacp://0.0.0.0:3101/listHostInfo")
     println("#########Host List")
     hostInfos.foreach(println)
-//    val df = dacpClient.get("dacp://0.0.0.0:3101/dataFrame1")
-//    println("###########println DataFrame")
-//    val s: StructType = df.schema
-//    df.foreach(println)
+    //    val df = dacpClient.get("dacp://0.0.0.0:3101/dataFrame1")
+    //    println("###########println DataFrame")
+    //    val s: StructType = df.schema
+    //    df.foreach(println)
   }
 
 }
 
 class DataReceiverTest extends DataReceiver {
-  /** Called once before receiving any rows */
-  override def start(): Unit = ???
+//  /** Called once before receiving any rows */
+//  override def start(): Unit = ???
+//
+//  /** Called for each received batch of rows */
+//  override def receiveRow(dataFrame: DataFrame): Unit = ???
+//
+//  /** Called after all batches are received successfully */
+//  override def finish(): Unit = ???
 
-  /** Called for each received batch of rows */
-  override def receiveRow(dataFrame: DataFrame): Unit = ???
-
-  /** Called after all batches are received successfully */
-  override def finish(): Unit = ???
+  override def receive(dataFrame: DataFrame): Unit = ???
 }
 
 
@@ -194,6 +253,8 @@ class DataProviderTest extends DataProvider {
       override def getColumnAlias(colName: String): Option[String] = Some("")
 
       override def getColumnTitle(colName: String): Option[String] = Some("")
+
+      override def getDataFrameTitle(): Option[String] = ???
     }
   }
 
@@ -218,14 +279,14 @@ class AuthorProviderTest extends AuthProvider {
    *
    * @throws AuthorizationException
    */
-  override def authenticate(credentials: Credentials): AuthenticatedUser = new AuthenticatedUser{
-    override def token: String = {
-      credentials match {
-        case UsernamePassword("Admin", "Admin") => "1"
-        case _ => "2"
-      }
-    }
-  }
+//  override def authenticate(credentials: Credentials): AuthenticatedUser = new AuthenticatedUser{
+//    override def token: String = {
+//      credentials match {
+//        case UsernamePassword("Admin", "Admin") => "1"
+//        case _ => "2"
+//      }
+//    }
+//  }
 
   /**
    * 判断用户是否具有某项权限
@@ -235,8 +296,15 @@ class AuthorProviderTest extends AuthProvider {
    * @param opList        操作类型列表（Java List）
    * @return 是否有权限
    */
-  override def checkPermission(user: AuthenticatedUser, dataFrameName: String, opList: java.util.List[DataOperationType]): Boolean = {
-    if(user.token == "1") true else false
-//    true
+//  override def checkPermission(user: AuthenticatedUser, dataFrameName: String, opList: java.util.List[DataOperationType]): Boolean = {
+//    if(user.token == "1") true else false
+////    true
+//  }
+
+  override def checkPermission(user: UserPrincipal, dataFrameName: String, opList: List[DataOperationType]): Boolean = {
+//    if(user.token == "1") true else false
+    true
   }
+
+  override def authenticate(credentials: Credentials): UserPrincipal = ???
 }

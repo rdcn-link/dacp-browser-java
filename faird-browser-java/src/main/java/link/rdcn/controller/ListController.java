@@ -237,6 +237,16 @@ public class ListController {
         loadedRows.addAll(pageRows);
         offset[0] += rowsPerPage;
         bytes = bytesFetched[0] / 1024.0;
-        mainController.setTimeAndByteLabel("Status:   Run time: "+ elapsedMs + "ms" + "  Load Bytes: " + bytes);
+
+        int rowCount = loadedRows.size();
+        int colCount = tableView.getColumns().size();
+
+//        mainController.setTimeAndByteLabel("Status:   Run time: "+ elapsedMs + "ms" + "  Load Bytes: " + bytes);
+        mainController.setTimeAndByteLabel(
+                "Status:   Run time: " + elapsedMs + "ms" +
+                        "  Load Bytes: " + bytes +
+                        "  Rows: " + rowCount +
+                        "  Cols: " + colCount
+        );
     }
 }

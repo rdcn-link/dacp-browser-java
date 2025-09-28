@@ -22,8 +22,11 @@ public class TestJavaFXMain extends Application {
         scene.getStylesheets().add(getClass().getResource("/style_fx.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.initStyle(StageStyle.UNDECORATED);
+        System.out.println("1111111");
+
 //        primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.show();
+
     }
     public static void main(String[] args) {
         launch(args);
