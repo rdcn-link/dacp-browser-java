@@ -2,10 +2,11 @@ package link.rdcn
 
 import link.rdcn.dacp.FairdConfig
 import link.rdcn.dacp.client.DacpClient
+import link.rdcn.dacp.provider.DataProvider
 import link.rdcn.dacp.receiver.DataReceiver
 import link.rdcn.dacp.server.DacpServer
+import link.rdcn.dacp.struct.{DataFrameDocument, DataFrameStatistics}
 import link.rdcn.dacp.user.{AuthProvider, DataOperationType}
-import link.rdcn.provider.{DataFrameDocument, DataFrameStatistics, DataProvider}
 import link.rdcn.struct.ClosableIterator
 import org.junit.jupiter.api.Test
 import link.rdcn.struct.ValueType.{DoubleType, IntType, StringType}
