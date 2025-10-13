@@ -40,7 +40,6 @@ class DacpServerStart {
 
   }
 
-
   @Test
   def clientTest(): Unit = {
     val dacpClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)

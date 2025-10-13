@@ -17,12 +17,10 @@ public class TestJavaFXMain extends Application {
 
         primaryStage.setTitle("test");
         Scene scene = new Scene(root);
-
         scene.getStylesheets().add(getClass().getResource("/style_fx.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.initStyle(StageStyle.UNDECORATED);
-        System.out.println("1111111");
-
+        System.out.println("DACP browser starting...");
 //        primaryStage.initStyle(StageStyle.UNDECORATED);
         primaryStage.show();
 

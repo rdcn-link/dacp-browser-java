@@ -55,10 +55,77 @@ public class ListController {
 
     private void showData() {
         if (df == null) return;
-
         // 清空之前的列
         tableView.getColumns().clear();
         tableView.getSelectionModel().setSelectionMode(SelectionMode.SINGLE);
+
+//        TableColumn<Row, String> idColumn = new TableColumn<>("ID");
+//        idColumn.setCellValueFactory(cellData -> {
+//            int index = tableView.getItems().indexOf(cellData.getValue());
+//            return new javafx.beans.property.SimpleStringProperty(String.valueOf(index + 1));
+//        });
+//        idColumn.setPrefWidth(60);
+//        idColumn.setSortable(false);
+//        tableView.getColumns().add(idColumn);
+
+
+
+//        boolean isDetailedView = !currentUrl.contains("listDataSets") && !currentUrl.contains("listDataFrames");
+//        if (isDetailedView) {
+//            TableColumn<Row, String> idColumn = new TableColumn<>("#"); // 列名可以修改
+//            // 使用 cellValueFactory 来计算行号
+//            idColumn.setCellValueFactory(cellData -> {
+//                // 获取当前行的索引（从 0 开始）
+//                int rowIndex = tableView.getItems().indexOf(cellData.getValue());
+//                // 加上 1 作为行号
+//                return new javafx.beans.property.SimpleStringProperty(String.valueOf(rowIndex + 1));
+//            });
+//            idColumn.setPrefWidth(50); // 设置列宽，让它窄一些
+//            idColumn.setResizable(false); // 固定宽度
+//            tableView.getColumns().add(idColumn);
+//        }
+
+        boolean isDetailedView = !currentUrl.contains("listDataSets") && !currentUrl.contains("listDataFrames");
+        if (isDetailedView) {
+            TableColumn<Row, String> idColumn = new TableColumn<>("#"); // 序号列
+
+            // 设置行号
+            idColumn.setCellValueFactory(cellData -> {
+                int rowIndex = tableView.getItems().indexOf(cellData.getValue());
+                return new javafx.beans.property.SimpleStringProperty(String.valueOf(rowIndex + 1));
+            });
+
+            idColumn.setPrefWidth(50);
+            idColumn.setResizable(false);
+
+            // ✅ 自定义单元格样式
+            idColumn.setCellFactory(new javafx.util.Callback<TableColumn<Row, String>, TableCell<Row, String>>() {
+                @Override
+                public TableCell<Row, String> call(TableColumn<Row, String> column) {
+                    return new TableCell<Row, String>() {
+                        @Override
+                        protected void updateItem(String item, boolean empty) {
+                            super.updateItem(item, empty);
+                            if (empty || item == null) {
+                                setText(null);
+                                setStyle("");
+                            } else {
+                                setText(item);
+                                // 灰色背景 + 居中 + 去掉默认交替行颜色
+                                setStyle("-fx-background-color: #e6e6e6; " +
+                                        "-fx-alignment: center; " +
+                                        "-fx-border-color: #cccccc; " +
+                                        "-fx-border-width: 0 1 0 0;"); // 右边加一条淡灰色分隔线
+                            }
+                        }
+                    };
+                }
+            });
+
+            tableView.getColumns().add(0, idColumn); // 放在最前面
+        }
+
+
 
         // 动态创建表头
         Seq<Column> fields = df.schema().columns().toSeq();
@@ -166,6 +233,19 @@ public class ListController {
                         TablePosition<Row, ?> pos = tableView.getSelectionModel().getSelectedCells().get(0);
                         int colIndex = pos.getColumn();
 
+
+//                        if (colIndex > 0){
+//                            int dfIndex = colIndex - 1;
+//                            Object cellValue = row.getItem().get(dfIndex);
+//                            if (cellValue != null && cellValue.toString().contains("dacp://0.0.0.0:3101")) {
+//                                Row rowData = row.getItem();
+//                                String datasetId = rowData.get(0).toString();
+//                                String dfUrl = "dacp://0.0.0.0:3101/listDataFrames/" + datasetId;
+//                                mainController.inputField.setText(dfUrl);
+//                                mainController.skipQueryList(dfUrl);
+//                            }
+//                        }
+
                         Object cellValue = row.getItem().get(colIndex);
                         if (cellValue != null && cellValue.toString().contains("dacp://0.0.0.0:3101")) {
                             Row rowData = row.getItem();
@@ -189,6 +269,18 @@ public class ListController {
                             TablePosition<Row, ?> pos = tableView.getSelectionModel().getSelectedCells().get(0);
                             int colIndex = pos.getColumn();
 
+//                            if (colIndex > 0){
+//                                int dfIndex = colIndex - 1;
+//                                Object cellValue = row.getItem().get(dfIndex);
+//
+//                                if (cellValue != null && cellValue.toString().contains("Ref")) {
+//                                    Row rowData = row.getItem();
+//                                    String dataframeId = rowData.get(0).toString();
+//                                    String dfUrl = "dacp://0.0.0.0:3101/" + dataframeId;
+//                                    mainController.inputField.setText(dfUrl);
+//                                    mainController.skipQueryList(dfUrl);
+//                                }
+//                            }
                             Object cellValue = row.getItem().get(colIndex);
 
                             if (cellValue != null && cellValue.toString().contains("Ref")) {
@@ -236,7 +328,7 @@ public class ListController {
         // ✅ 加载到表格
         loadedRows.addAll(pageRows);
         offset[0] += rowsPerPage;
-        bytes = bytesFetched[0] / 1024.0;
+        bytes = bytesFetched[0] / 1000.0;
 
         int rowCount = loadedRows.size();
         int colCount = tableView.getColumns().size();
@@ -244,7 +336,7 @@ public class ListController {
 //        mainController.setTimeAndByteLabel("Status:   Run time: "+ elapsedMs + "ms" + "  Load Bytes: " + bytes);
         mainController.setTimeAndByteLabel(
                 "Status:   Run time: " + elapsedMs + "ms" +
-                        "  Load Bytes: " + bytes +
+                        "  Load Bytes: " + bytes + "KB" +
                         "  Rows: " + rowCount +
                         "  Cols: " + colCount
         );

@@ -44,9 +44,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -111,11 +109,22 @@ public class MainController {
     private boolean maximized = false;
 
     // DACP server
-    private static DacpServer dacpServer;
+//    private static DacpServer dacpServer;
+
+
+    // 用 LinkedHashMap 保持插入顺序，可限制缓存大小
+    private final Map<String, DacpClient> clientCache = new LinkedHashMap<>();
+    private static final int MAX_CLIENT_CACHE = 5; // 可限制最大客户端数
+
+    private DacpServer dacpServer;
+
+
     private DacpClient fairdClient;
 
     private final Stack<String> backStack = new Stack<>();   // back history
     private final Stack<String> forwardStack = new Stack<>(); // forward history
+
+
 
 
     @FXML
@@ -191,9 +200,11 @@ public class MainController {
 
     @FXML
     void initialize() throws IOException {
-        if (fairdClient == null) {
-            fairdClient = getClient();
-        }
+//        if (fairdClient == null) {
+//            fairdClient = getClient();
+//        }
+        DacpClient defaultClient = getClient("dacp://0.0.0.0:3101");
+        fairdClient = defaultClient;
 
         backButton.setDisable(backStack.isEmpty());
         forwardButton.setDisable(forwardStack.isEmpty());
@@ -373,16 +384,58 @@ public class MainController {
         ((Stage) tabPane.getScene().getWindow()).close();
     }
 
-    private DacpClient getClient() {
+//    private DacpClient getClient() {
+//        if (dacpServer == null) {
+//            dacpServer = new DacpServer(new DataProviderTest(), new DataReceiverTest(), new AuthorProviderTest());
+//            dacpServer.start(new FairdConfig());
+//        }
+//        if (fairdClient == null) {
+//            fairdClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS());
+//        }
+//        return fairdClient;
+//    }
+    private String extractBaseUrl(String url) {
+        if (url == null) return null;
+        // dacp://ip:port/... -> dacp://ip:port
+        int idx = url.indexOf("/", 7); // 跳过 dacp://
+        return idx > 0 ? url.substring(0, idx) : url;
+    }
+
+    private DacpClient getClient(String url) {
+        String baseUrl = extractBaseUrl(url);
+        if (baseUrl == null) return null;
+
+        System.out.println("baseUrl: " + baseUrl);
+        System.out.println(clientCache);
+        // 已有缓存直接返回
+        if (clientCache.containsKey(baseUrl)) {
+            return clientCache.get(baseUrl);
+        }
+
+        // 初始化 DACP server（只做一次）
         if (dacpServer == null) {
             dacpServer = new DacpServer(new DataProviderTest(), new DataReceiverTest(), new AuthorProviderTest());
             dacpServer.start(new FairdConfig());
         }
-        if (fairdClient == null) {
-            fairdClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS());
+
+        // 创建新客户端
+        DacpClient client = DacpClient.connect(baseUrl, Credentials.ANONYMOUS());
+
+        // 缓存客户端，若超过限制，移除最早的
+        if (clientCache.size() >= MAX_CLIENT_CACHE) {
+            String firstKey = clientCache.keySet().iterator().next();
+            try {
+                clientCache.get(firstKey).close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            clientCache.remove(firstKey);
         }
-        return fairdClient;
+
+        clientCache.put(baseUrl, client);
+        return client;
     }
+
 
     @FXML
     private void downloadFile() {
@@ -629,6 +682,9 @@ public class MainController {
                 return;
             }
             try {
+                DacpClient client = getClient(url);
+                if (client == null) return;
+
                 DataFrame df = fairdClient.get(url);
                 currentDf = df;
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
