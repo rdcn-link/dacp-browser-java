@@ -33,6 +33,7 @@ import link.rdcn.struct.Column;
 import link.rdcn.struct.DataFrame;
 import link.rdcn.struct.Row;
 import link.rdcn.user.Credentials;
+import link.rdcn.user.UsernamePassword;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -117,7 +118,6 @@ public class MainController {
     private static final int MAX_CLIENT_CACHE = 5; // 可限制最大客户端数
 
     private DacpServer dacpServer;
-
 
     private DacpClient fairdClient;
 
@@ -419,7 +419,8 @@ public class MainController {
         }
 
         // 创建新客户端
-        DacpClient client = DacpClient.connect(baseUrl, Credentials.ANONYMOUS());
+        DacpClient client = DacpClient.connect(baseUrl, new UsernamePassword("15117913512@126.com", "admin#U*Q!."));
+        this.loggedIn = true;
 
         // 缓存客户端，若超过限制，移除最早的
         if (clientCache.size() >= MAX_CLIENT_CACHE) {
@@ -685,7 +686,7 @@ public class MainController {
                 DacpClient client = getClient(url);
                 if (client == null) return;
 
-                DataFrame df = fairdClient.get(url);
+                DataFrame df = client.get(url);
                 currentDf = df;
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("/list.fxml"));
                 BorderPane listRoot = loader.load();

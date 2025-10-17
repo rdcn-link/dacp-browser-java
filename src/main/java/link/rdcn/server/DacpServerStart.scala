@@ -24,16 +24,21 @@ class DacpServerStart {
     val dacpServer = new DacpServer(new DataProviderTest, new DataReceiverTest, new AuthorProviderTest)
     dacpServer.start(new FairdConfig)
 
-    val dacpClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS)
+    // new UsernamePassword("15117913512@126.com", "admin#U*Q!.")
+//    val dacpClient = DacpClient.connect("dacp://10.0.90.43:3102", Credentials.ANONYMOUS)
+    val dacpClient = DacpClient.connect("dacp://10.0.90.43:3102", new UsernamePassword("15117913512@126.com", "admin#U*Q!."))
+
     println("#########DataSet List")
 
-    val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSets")
+//    val dfDataSets = dacpClient.get("dacp://0.0.0.0:3101/listDataSets")
+    val dfDataSets = dacpClient.get("dacp://10.0.90.43:3102/listDataSets")
+
     println("#########DataSet List")
     dfDataSets.foreach(println)
-    val dfNames = dacpClient.get("dacp://0.0.0.0:3101/listDataFrames/csv")
+    val dfNames = dacpClient.get("dacp://10.0.90.43:3102/listDataFrames/1971803545715953664")
     println("#########DataFrame List")
     dfNames.foreach(println)
-    val df = dacpClient.get("dacp://0.0.0.0:3101/get/csv")
+    val df = dacpClient.get("dacp://10.0.90.43:3102/xls_mnt_data_metacat_faird_test_化合物数据.xls_2478_df")
     println("###########println DataFrame")
     val s: StructType = df.schema
     df.foreach(println)
@@ -164,6 +169,8 @@ class DataProviderTest extends DataProvider {
       override def byteSize: Long = -1L
     }
   }
+
+  override def getDataFrameMetaData(dataFrameName: String, rdfModel: Model): Unit = {}
 }
 
 class AuthorProviderTest extends AuthProvider {

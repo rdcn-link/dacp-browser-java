@@ -9,6 +9,7 @@ import javafx.scene.Cursor;
 import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import link.rdcn.struct.Column;
+import link.rdcn.struct.DFRef;
 import link.rdcn.struct.DataFrame;
 import link.rdcn.struct.Row;
 import scala.collection.JavaConverters;
@@ -172,7 +173,7 @@ public class ListController {
 //                        setCursor(Cursor.DEFAULT);
                     } else {
                         setText(item);
-                        if (item.contains("dacp://0.0.0.0:3101")) {
+                        if (item.contains("dacp://")) {
                             getStyleClass().add(LINK_CELL_STYLE);
                             setCursor(Cursor.HAND);
                         } else {
@@ -246,11 +247,13 @@ public class ListController {
 //                            }
 //                        }
 
-                        Object cellValue = row.getItem().get(colIndex);
-                        if (cellValue != null && cellValue.toString().contains("dacp://0.0.0.0:3101")) {
-                            Row rowData = row.getItem();
-                            String datasetId = rowData.get(0).toString();
-                            String dfUrl = "dacp://0.0.0.0:3101/listDataFrames/" + datasetId;
+                        DFRef cellValue = (DFRef)row.getItem().get(colIndex);
+//                        System.out.println(cellValue.getClass());
+                        if (cellValue != null && cellValue.url().toString().contains("dacp://")) {
+//                            Row rowData = row.getItem();
+//                            String datasetId = rowData.get(0).toString();
+//                            String dfUrl = "dacp://0.0.0.0:3101/listDataFrames/" + datasetId;
+                            String dfUrl = cellValue.url().toString();
                             mainController.inputField.setText(dfUrl);
                             mainController.skipQueryList(dfUrl);
                         }
@@ -281,12 +284,14 @@ public class ListController {
 //                                    mainController.skipQueryList(dfUrl);
 //                                }
 //                            }
-                            Object cellValue = row.getItem().get(colIndex);
-
-                            if (cellValue != null && cellValue.toString().contains("Ref")) {
-                                Row rowData = row.getItem();
-                                String dataframeId = rowData.get(0).toString();
-                                String dfUrl = "dacp://0.0.0.0:3101/" + dataframeId;
+                            DFRef cellValue = (DFRef)row.getItem().get(colIndex);
+//                            System.out.println(cellValue.getClass());
+//                            System.out.println(cellValue.toString());
+                            if (cellValue != null && cellValue.url().contains("dacp://")) {
+//                                Row rowData = row.getItem();
+//                                String dataframeId = rowData.get(0).toString();
+//                                String dfUrl = "dacp://0.0.0.0:3101/" + dataframeId;
+                                String dfUrl = cellValue.url().toString();
                                 mainController.inputField.setText(dfUrl);
                                 mainController.skipQueryList(dfUrl);
                             }
