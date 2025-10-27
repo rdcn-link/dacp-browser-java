@@ -1,0 +1,82 @@
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.effect.DropShadow?>
+<?import javafx.scene.paint.Color?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="link.rdcn.controller.ErrorController"
+            prefWidth="900" prefHeight="550"
+            style="-fx-background-color: linear-gradient(to bottom right, #f8fafc, #e9eef3);">
+
+    <center>
+        <VBox alignment="CENTER" spacing="20">
+            <padding>
+                <Insets top="80" bottom="60" left="40" right="40"/>
+            </padding>
+
+            <!-- 图标 -->
+            <ImageView fx:id="errorIcon"
+                       fitWidth="140"
+                       fitHeight="140"
+                       preserveRatio="true"
+                       smooth="true">
+                <effect>
+                    <DropShadow radius="10" color="#b0b0b0"/>
+                </effect>
+                <image>
+                    <!-- 这里换成你的资源路径，例如 @/icons/error.png -->
+                    <Image url="@/error.png"/>
+                </image>
+            </ImageView>
+
+            <!-- 主标题：状态码 -->
+            <Label fx:id="statusLabel"
+                   text="403 Forbidden"
+                   style="-fx-font-size: 48px;
+                          -fx-font-weight: bold;
+                          -fx-text-fill: #1e293b;
+                          -fx-font-family: 'Segoe UI', 'Helvetica Neue', Arial;"/>
+
+            <!-- 副标题：错误信息 -->
+            <Label fx:id="messageLabel"
+                   text="You don’t have permission to access this resource."
+                   wrapText="true"
+                   maxWidth="700"
+                   alignment="CENTER"
+                   style="-fx-font-size: 18px;
+                          -fx-text-fill: #475569;
+                          -fx-font-family: 'Segoe UI', 'Helvetica Neue', Arial;
+                          -fx-text-alignment: center;"/>
+
+            <!-- 按钮 -->
+<!--            <Button text="← Go Back"-->
+<!--                    onAction="#onBackClicked"-->
+<!--                    style="-fx-background-color: linear-gradient(to right, #3b82f6, #2563eb);-->
+<!--                           -fx-text-fill: white;-->
+<!--                           -fx-font-weight: bold;-->
+<!--                           -fx-font-size: 14px;-->
+<!--                           -fx-background-radius: 8;-->
+<!--                           -fx-padding: 10 25;-->
+<!--                           -fx-cursor: hand;-->
+<!--                           -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.25), 6, 0, 0, 2);"/>-->
+            <!-- 登录按钮（默认隐藏） -->
+            <Button fx:id="actionButton"
+                    text="← Go Back"
+                    visible="false"
+                    onAction="#onActionButtonClicked"
+                    style="-fx-background-color: linear-gradient(to right, #3b82f6, #2563eb);
+               -fx-text-fill: white;
+               -fx-font-weight: bold;
+               -fx-font-size: 14px;
+               -fx-background-radius: 8;
+               -fx-padding: 10 25;
+               -fx-cursor: hand;
+               -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.25), 6, 0, 0, 2);"/>
+
+        </VBox>
+    </center>
+
+</BorderPane>

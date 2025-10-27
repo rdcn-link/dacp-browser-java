@@ -4,7 +4,7 @@
 
   <groupId>org.example</groupId>
   <artifactId>dacp-browser-java</artifactId>
-  <version>1.0-alpha-202509280</version>
+  <version>1.0-alpha-202510270</version>
   <packaging>jar</packaging>
 
   <name>faird-browser-java</name>

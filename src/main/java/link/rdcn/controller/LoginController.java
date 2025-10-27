@@ -52,13 +52,7 @@ public class LoginController {
         }
 
         UsernamePassword user = new UsernamePassword(username, password);
-        mainController.setFaridClient(DacpClient.connect("dacp://0.0.0.0:3101", user));
-
-
-        if (!userDatabase.containsKey(username) || !userDatabase.get(username).equals(password)) {
-            showAlert(Alert.AlertType.ERROR, "登录失败", "用户名或密码错误");
-            return;
-        }
+        mainController.setFaridClient(DacpClient.connect(mainController.baseUrl, user));
 
         showAlert(Alert.AlertType.INFORMATION, "登录成功", "欢迎 " + username + "!");
 //        openMainPage(event);

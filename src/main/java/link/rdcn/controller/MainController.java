@@ -34,6 +34,7 @@ import link.rdcn.struct.DataFrame;
 import link.rdcn.struct.Row;
 import link.rdcn.user.Credentials;
 import link.rdcn.user.UsernamePassword;
+import org.apache.arrow.flight.FlightRuntimeException;
 import org.apache.arrow.vector.VarCharVector;
 import org.apache.arrow.vector.types.pojo.ArrowType;
 import org.apache.arrow.vector.types.pojo.Field;
@@ -54,6 +55,7 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.ipc.ArrowFileWriter;
 
 
+import javax.swing.*;
 import java.io.FileOutputStream;
 import java.nio.channels.Channels;
 
@@ -112,7 +114,6 @@ public class MainController {
     // DACP server
 //    private static DacpServer dacpServer;
 
-
     // 用 LinkedHashMap 保持插入顺序，可限制缓存大小
     private final Map<String, DacpClient> clientCache = new LinkedHashMap<>();
     private static final int MAX_CLIENT_CACHE = 5; // 可限制最大客户端数
@@ -125,6 +126,7 @@ public class MainController {
     private final Stack<String> forwardStack = new Stack<>(); // forward history
 
 
+    protected String baseUrl;
 
 
     @FXML
@@ -184,7 +186,6 @@ public class MainController {
         this.fairdClient = faridClient;
     }
 
-
     private Stage getStage() {
         if (contentPane != null && contentPane.getScene() != null) {
             return (Stage) contentPane.getScene().getWindow();
@@ -193,19 +194,12 @@ public class MainController {
         }
     }
 
-
     private boolean hasAccess(String url) {
         return !(url.matches("^dacp://(\\d{1,3}\\.){3}\\d{1,3}:\\d+/.+$") && !url.contains("listDataSets") && !url.contains("listDataFrames") && !url.contains("listHostInfo"));
     }
 
     @FXML
     void initialize() throws IOException {
-//        if (fairdClient == null) {
-//            fairdClient = getClient();
-//        }
-        DacpClient defaultClient = getClient("dacp://0.0.0.0:3101");
-        fairdClient = defaultClient;
-
         backButton.setDisable(backStack.isEmpty());
         forwardButton.setDisable(forwardStack.isEmpty());
 
@@ -233,17 +227,14 @@ public class MainController {
             List<String> historyMatches = historyUrls.stream()
                     .filter(url -> url.startsWith(newVal))
                     .collect(Collectors.toList());
-
             List<String> favoriteMatches = favorites.stream()
                     .filter(url -> url.contains(newVal))
                     .limit(5)
                     .collect(Collectors.toList());
-
             if (historyMatches.isEmpty() && favoriteMatches.isEmpty()) {
                 suggestionMenu.hide();
                 return;
             }
-
             suggestionMenu.getItems().clear();
 
             // 历史记录部分
@@ -257,12 +248,10 @@ public class MainController {
                     itemBox.setSpacing(5);
                     Label urlLabel = new Label(url);
                     itemBox.getChildren().add(urlLabel);
-
                     if (!hasAccess(url)) {
                         Label lockLabel = new Label("\uD83D\uDD12"); // 🔒
                         itemBox.getChildren().add(lockLabel);
                     }
-
                     CustomMenuItem item = new CustomMenuItem(itemBox);
                     item.setOnAction(e -> {
                         inputField.setText(url);
@@ -291,7 +280,6 @@ public class MainController {
                         Label lockLabel = new Label("\uD83D\uDD12"); // 🔒
                         itemBox.getChildren().add(lockLabel);
                     }
-
                     CustomMenuItem item = new CustomMenuItem(itemBox);
                     item.setOnAction(e -> {
                         inputField.setText(url);
@@ -303,7 +291,6 @@ public class MainController {
 
                     suggestionMenu.getItems().add(item);
                 }
-
                 // 添加 “查看收藏夹” 链接
                 Label viewFavoritesLabel = new Label("查看收藏夹");
                 viewFavoritesLabel.setStyle("-fx-text-fill: blue; -fx-underline: true;"); // 蓝色下划线，像链接
@@ -316,8 +303,6 @@ public class MainController {
                 viewFavoritesLabel.setCursor(Cursor.HAND);// 点击不会自动隐藏
                 suggestionMenu.getItems().add(viewFavoritesItem);
             }
-
-
             if (!suggestionMenu.isShowing()) {
                 suggestionMenu.show(inputField, Side.BOTTOM, 0, 0);
             }
@@ -384,16 +369,6 @@ public class MainController {
         ((Stage) tabPane.getScene().getWindow()).close();
     }
 
-//    private DacpClient getClient() {
-//        if (dacpServer == null) {
-//            dacpServer = new DacpServer(new DataProviderTest(), new DataReceiverTest(), new AuthorProviderTest());
-//            dacpServer.start(new FairdConfig());
-//        }
-//        if (fairdClient == null) {
-//            fairdClient = DacpClient.connect("dacp://0.0.0.0:3101", Credentials.ANONYMOUS());
-//        }
-//        return fairdClient;
-//    }
     private String extractBaseUrl(String url) {
         if (url == null) return null;
         // dacp://ip:port/... -> dacp://ip:port
@@ -401,41 +376,65 @@ public class MainController {
         return idx > 0 ? url.substring(0, idx) : url;
     }
 
-    private DacpClient getClient(String url) {
-        String baseUrl = extractBaseUrl(url);
+    private DacpClient getClient(String url) throws IOException {
+        baseUrl = extractBaseUrl(url);
         if (baseUrl == null) return null;
 
         System.out.println("baseUrl: " + baseUrl);
         System.out.println(clientCache);
+
         // 已有缓存直接返回
         if (clientCache.containsKey(baseUrl)) {
             return clientCache.get(baseUrl);
         }
 
-        // 初始化 DACP server（只做一次）
-        if (dacpServer == null) {
-            dacpServer = new DacpServer(new DataProviderTest(), new DataReceiverTest(), new AuthorProviderTest());
-            dacpServer.start(new FairdConfig());
-        }
-
-        // 创建新客户端
-        DacpClient client = DacpClient.connect(baseUrl, new UsernamePassword("15117913512@126.com", "admin#U*Q!."));
-        this.loggedIn = true;
-
-        // 缓存客户端，若超过限制，移除最早的
-        if (clientCache.size() >= MAX_CLIENT_CACHE) {
-            String firstKey = clientCache.keySet().iterator().next();
-            try {
-                clientCache.get(firstKey).close();
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            // 初始化 DACP server（只做一次）
+            if (dacpServer == null) {
+                dacpServer = new DacpServer(new DataProviderTest(), new DataReceiverTest(), new AuthorProviderTest());
+                dacpServer.start(new FairdConfig());
             }
-            clientCache.remove(firstKey);
-        }
 
-        clientCache.put(baseUrl, client);
-        return client;
+            DacpClient client = null;
+            // 创建新客户端
+            if (fairdClient == null){
+                client = DacpClient.connect(baseUrl, Credentials.ANONYMOUS());
+            }else{
+                client = fairdClient;
+            }
+            // 如果使用账号密码登录，可以用下面一行替换
+//            DacpClient client = DacpClient.connect(baseUrl, new UsernamePassword("15117913512@126.com", "admin#U*Q!."));
+//            this.loggedIn = true;
+            // 缓存客户端，若超过限制，移除最早的
+            if (clientCache.size() >= MAX_CLIENT_CACHE) {
+                String firstKey = clientCache.keySet().iterator().next();
+                try {
+                    clientCache.get(firstKey).close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                clientCache.remove(firstKey);
+            }
+            clientCache.put(baseUrl, client);
+            return client;
+        } catch (Exception e) {
+//            System.out.println("111111");
+            System.out.println(e);
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/error.fxml"));
+            Parent root = loader.load();
+
+            ErrorController controller = loader.getController();
+            controller.setMainController(this);
+            controller.showErrorByException(e);
+
+            Stage stage = new Stage();
+            stage.setTitle("Error");
+            stage.setScene(new Scene(root));
+            stage.show();
+            return null;
+        }
     }
+
 
 
     @FXML
@@ -668,20 +667,20 @@ public class MainController {
 
     private void queryAndShow(String url) {
         try {
-            if (!hasAccess(url) && !this.loggedIn) {
-                FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
-                Parent root = loader.load();
-                LoginController loginController = loader.getController();
-                loginController.setMainController(this);
-
-                Stage loginStage = new Stage();
-                loginStage.initModality(Modality.APPLICATION_MODAL);
-                loginStage.setTitle("User Login");
-                loginStage.setScene(new Scene(root));
-                loginStage.setResizable(false);
-                loginStage.showAndWait();
-                return;
-            }
+//            if (!hasAccess(url) && !this.loggedIn) {
+//                FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
+//                Parent root = loader.load();
+//                LoginController loginController = loader.getController();
+//                loginController.setMainController(this);
+//
+//                Stage loginStage = new Stage();
+//                loginStage.initModality(Modality.APPLICATION_MODAL);
+//                loginStage.setTitle("User Login");
+//                loginStage.setScene(new Scene(root));
+//                loginStage.setResizable(false);
+//                loginStage.showAndWait();
+//                return;
+//            }
             try {
                 DacpClient client = getClient(url);
                 if (client == null) return;
@@ -709,16 +708,53 @@ public class MainController {
                 }
 
             } catch (Exception e) {
-                System.out.println(e.getMessage());
-                if (e.getMessage().contains("DataFrame is not accessible")) {
-                    Platform.runLater(() -> {
-                        Alert alert = new Alert(Alert.AlertType.WARNING);
-                        alert.setTitle("Access Denied");
-                        alert.setHeaderText(null);
-                        alert.setContentText("This user does not have access permission. Please switch user and sign in.");
-                        alert.showAndWait();
-                    });
-                }
+                System.out.println(e);
+
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/error.fxml"));
+                Parent root = loader.load();
+
+                ErrorController controller = loader.getController();
+                controller.setMainController(this);
+                controller.showErrorByException(e);
+
+                Stage stage = new Stage();
+                stage.setTitle("Error");
+                stage.setScene(new Scene(root));
+                stage.show();
+
+//                if (e.toString().contains("UNAUTHORIZED")) {
+//                    System.out.println("UNAUTHORIZED");
+//                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+//                    alert.setTitle("");
+//                    alert.setHeaderText(null);
+//                    alert.setContentText("The client is authenticated, but not have permissions for the requested operation, please login with another account or contact with administrator");
+//                    alert.showAndWait();
+//                    FXMLLoader loader = new FXMLLoader(getClass().getResource("/login.fxml"));
+//                    Parent root = null;
+//                    try {
+//                        root = loader.load();
+//                    } catch (IOException ex) {
+//                        throw new RuntimeException(ex);
+//                    }
+//                    LoginController loginController = loader.getController();
+//                    loginController.setMainController(this);
+//
+//                    Stage loginStage = new Stage();
+//                    loginStage.initModality(Modality.APPLICATION_MODAL);
+//                    loginStage.setTitle("User Login");
+//                    loginStage.setScene(new Scene(root));
+//                    loginStage.setResizable(false);
+//                    loginStage.showAndWait();
+//                }
+//                if (e.getMessage().contains("DataFrame is not accessible")) {
+//                    Platform.runLater(() -> {
+//                        Alert alert = new Alert(Alert.AlertType.WARNING);
+//                        alert.setTitle("Access Denied");
+//                        alert.setHeaderText(null);
+//                        alert.setContentText("This user does not have access permission. Please switch user and sign in.");
+//                        alert.showAndWait();
+//                    });
+//                }
             }
         } catch (Exception e) {
             e.printStackTrace();

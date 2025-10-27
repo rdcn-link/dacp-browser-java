@@ -25,8 +25,8 @@ class DacpServerStart {
     dacpServer.start(new FairdConfig)
 
     // new UsernamePassword("15117913512@126.com", "admin#U*Q!.")
-//    val dacpClient = DacpClient.connect("dacp://10.0.90.43:3102", Credentials.ANONYMOUS)
-    val dacpClient = DacpClient.connect("dacp://10.0.90.43:3102", new UsernamePassword("15117913512@126.com", "admin#U*Q!."))
+    val dacpClient = DacpClient.connect("dacp://10.0.90.43:3102", Credentials.ANONYMOUS)
+//    val dacpClient = DacpClient.connect("dacp://10.0.90.43:3102", new UsernamePassword("15117913512@126.com", "admin#U*Q!."))
 
     println("#########DataSet List")
 
@@ -109,7 +109,7 @@ class DataProviderTest extends DataProvider {
     private def safeToDouble(s: String): Double = if (s == null || s.trim.isEmpty) 0.0 else s.toDouble
 
     override def iterator: ClosableIterator[Row] = {
-      val source = Source.fromFile("/Volumes/My Passport/archive/yellow_tripdata_2015-01.csv")
+      val source = Source.fromFile("/Volumes/MyPassport/archive/yellow_tripdata_2015-01.csv")
       val lines = source.getLines()
 
       // 跳过表头
@@ -177,7 +177,19 @@ class AuthorProviderTest extends AuthProvider {
 
   override def checkPermission(user: UserPrincipal, dataFrameName: String, opList: List[DataOperationType]): Boolean = {
     true
+//    throw new Exception("wufan")
+//    false
   }
 
-  override def authenticate(credentials: Credentials): UserPrincipal = new UserPrincipal {}
+  override def authenticate(credentials: Credentials): UserPrincipal =
+    {
+
+//      System.out.println("1111")
+      if (Credentials.ANONYMOUS == credentials) {
+        System.out.println("用户正在匿名登陆....")
+        throw new RuntimeException("匿名用户无法认证")
+      }
+      new UserPrincipal {}
+    }
+
 }
