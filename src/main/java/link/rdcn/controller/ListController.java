@@ -144,7 +144,7 @@ public class ListController {
 //                        setCursor(Cursor.DEFAULT);
                     } else {
                         setText(item);
-                        if (item.contains("dacp://")) {
+                        if (item.contains("dacp://") || item.contains("dftp://")) {
                             getStyleClass().add(LINK_CELL_STYLE);
                             setCursor(Cursor.HAND);
                         } else {
@@ -194,6 +194,8 @@ public class ListController {
             }
         });
 
+
+
         // === 点击跳转逻辑 ===
         if (currentUrl.contains("listDataSets")) {
             tableView.setRowFactory(tv -> {
@@ -203,7 +205,7 @@ public class ListController {
                         TablePosition<Row, ?> pos = tableView.getSelectionModel().getSelectedCells().get(0);
                         int colIndex = pos.getColumn();
                         DFRef cellValue = (DFRef)row.getItem().get(colIndex);
-                        if (cellValue != null && cellValue.url().toString().contains("dacp://")) {
+                        if (cellValue != null && cellValue.url().toString().contains("dacp://") || cellValue.url().toString().contains("dftp://")) {
                             String dfUrl = cellValue.url().toString();
                             mainController.inputField.setText(dfUrl);
                             mainController.skipQueryList(dfUrl);
@@ -223,9 +225,8 @@ public class ListController {
                             TablePosition<Row, ?> pos = tableView.getSelectionModel().getSelectedCells().get(0);
                             int colIndex = pos.getColumn();
                             DFRef cellValue = (DFRef)row.getItem().get(colIndex);
-                            if (cellValue != null && cellValue.url().contains("dacp://")) {
+                            if (cellValue != null && cellValue.url().contains("dacp://") || cellValue.url().contains("dftp://")) {
                                 String dfUrl = cellValue.url().toString();
-
                                 System.out.println(dfUrl);
                                 mainController.inputField.setText(dfUrl);
                                 mainController.skipQueryList(dfUrl);
@@ -236,6 +237,32 @@ public class ListController {
                 return row;
             });
         }
+
+
+        if (currentUrl.contains("dacp://") || currentUrl.contains("dftp://")) {
+            tableView.setRowFactory(tv -> {
+                TableRow<Row> row = new TableRow<>();
+                row.setOnMouseClicked(event -> {
+                    if (event.getClickCount() == 1 && !row.isEmpty()) {
+                        if (!tableView.getSelectionModel().getSelectedCells().isEmpty()) {
+                            TablePosition<Row, ?> pos = tableView.getSelectionModel().getSelectedCells().get(0);
+                            int colIndex = pos.getColumn();
+                            DFRef cellValue = (DFRef)row.getItem().get(colIndex-1);
+                            if (cellValue != null && cellValue.url().contains("dacp://") || cellValue.url().contains("dftp://")) {
+                                String dfUrl = cellValue.url().toString();
+                                System.out.println(dfUrl);
+                                mainController.inputField.setText(dfUrl);
+                                mainController.skipQueryList(dfUrl);
+                            }
+                        }
+                    }
+                });
+                return row;
+            });
+        }
+
+
+
     }
 
 

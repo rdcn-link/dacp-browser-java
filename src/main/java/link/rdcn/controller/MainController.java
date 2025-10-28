@@ -26,6 +26,7 @@ import link.rdcn.DataProviderTest;
 import link.rdcn.DataReceiverTest;
 
 //import link.rdcn.server.dacp.DacpServer;
+import link.rdcn.client.DftpClient;
 import link.rdcn.dacp.FairdConfig;
 import link.rdcn.dacp.client.DacpClient;
 import link.rdcn.dacp.server.DacpServer;
@@ -115,12 +116,13 @@ public class MainController {
 //    private static DacpServer dacpServer;
 
     // 用 LinkedHashMap 保持插入顺序，可限制缓存大小
-    private final Map<String, DacpClient> clientCache = new LinkedHashMap<>();
+    private final Map<String, DftpClient> clientCache = new LinkedHashMap<>();
     private static final int MAX_CLIENT_CACHE = 5; // 可限制最大客户端数
 
     private DacpServer dacpServer;
 
-    private DacpClient fairdClient;
+//    private DacpClient fairdClient;
+    private DftpClient fairdClient;
 
     private final Stack<String> backStack = new Stack<>();   // back history
     private final Stack<String> forwardStack = new Stack<>(); // forward history
@@ -161,8 +163,8 @@ public class MainController {
         }
     }
 
-    protected void setFaridClient(DacpClient faridClient) {
-        DacpClient oldClient = this.fairdClient;
+    protected void setFaridClient(DftpClient faridClient) {
+        DftpClient oldClient = this.fairdClient;
         // 先断开与旧 client 相关的 DataFrame（如果存在）
         if (this.currentDf != null) {
             try {
@@ -376,7 +378,7 @@ public class MainController {
         return idx > 0 ? url.substring(0, idx) : url;
     }
 
-    private DacpClient getClient(String url) throws IOException {
+    private DftpClient getClient(String url) throws IOException {
         baseUrl = extractBaseUrl(url);
         if (baseUrl == null) return null;
 
@@ -395,17 +397,20 @@ public class MainController {
                 dacpServer.start(new FairdConfig());
             }
 
-            DacpClient client = null;
-            // 创建新客户端
-            if (fairdClient == null){
-                client = DacpClient.connect(baseUrl, Credentials.ANONYMOUS());
-            }else{
+            DftpClient client;
+            if (fairdClient == null) {
+                if (baseUrl.contains("dacp:")) {
+                    // dacp 协议
+                    client = DacpClient.connect(baseUrl, Credentials.ANONYMOUS());
+                } else if (baseUrl.contains("dftp:")) {
+                    // dftp 协议
+                    client = DftpClient.connect(baseUrl, Credentials.ANONYMOUS());
+                } else {
+                    throw new IllegalArgumentException("Unsupported protocol in baseUrl: " + baseUrl);
+                }
+            } else {
                 client = fairdClient;
             }
-            // 如果使用账号密码登录，可以用下面一行替换
-//            DacpClient client = DacpClient.connect(baseUrl, new UsernamePassword("15117913512@126.com", "admin#U*Q!."));
-//            this.loggedIn = true;
-            // 缓存客户端，若超过限制，移除最早的
             if (clientCache.size() >= MAX_CLIENT_CACHE) {
                 String firstKey = clientCache.keySet().iterator().next();
                 try {
@@ -415,8 +420,10 @@ public class MainController {
                 }
                 clientCache.remove(firstKey);
             }
+
             clientCache.put(baseUrl, client);
             return client;
+
         } catch (Exception e) {
 //            System.out.println("111111");
             System.out.println(e);
@@ -682,7 +689,7 @@ public class MainController {
 //                return;
 //            }
             try {
-                DacpClient client = getClient(url);
+                DftpClient client = getClient(url);
                 if (client == null) return;
 
                 DataFrame df = client.get(url);
